@@ -305,12 +305,43 @@ Structure:
 └── tests/validate.sh
 ```
 
-Publishing (maintainer):
+Publishing / Auto-update (maintainer):
+
+This repo auto-publishes to npm via GitHub Actions + OIDC trusted publishing.
+
+- Every push to `main` with conventional commits (e.g. `feat:`, `fix:`) triggers `release-please`
+- Release-please opens/updates a Release PR that bumps `package.json` + `CHANGELOG.md`
+- When that Release PR is merged, `release.yml` publishes to npm with provenance:
+  `npm publish --provenance --access public`
+
+**One-time setup for trusted publishing (no NPM_TOKEN needed):**
+
+1. Go to https://www.npmjs.com/package/opencode-autonomy/access
+2. Trusted Publishers → Add GitHub Actions:
+   - Repo: `vocino/opencode-autonomy`
+   - Workflow: `release.yml` (and also `publish-tag.yml` for manual tags)
+   - Environment: leave empty
+3. Ensure workflows have `id-token: write` (already set)
+
+Fallback:
 
 ```bash
+# Manual tag publish (workflow publish-tag.yml)
+npm version patch # or minor/major
+git push --follow-tags
+
+# Or manual local publish
 npm run build
 npm publish --access public
-# or via release-please / trusted publishing
+```
+
+Users then get updates via:
+
+```bash
+npx opencode-autonomy@latest --clean
+# if using plugin array, clear cache:
+rm -rf ~/.cache/opencode/packages/opencode-autonomy@latest
+# restart opencode
 ```
 
 ## Contributing

@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          release-type: node
+          # Uses conventional commits to bump version and create CHANGELOG
+          # Configure in release-please-config.json if needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+          cache: npm
+
+      - name: Install
+        run: npm ci || npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npm with provenance (OIDC trusted publishing)
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # If NPM_TOKEN not set, OIDC will be used via trusted publisher
+          # Configure trusted publisher at https://www.npmjs.com/package/opencode-autonomy/access
+          #   -> Trusted Publishers -> GitHub Actions
+          #   repo: vocino/opencode-autonomy
+          #   workflow: release.yml
+          #   environment: (leave empty)
+
+      - name: Verify published version
+        run: |
+          sleep 5
+          npm view opencode-autonomy version
+          npx opencode-autonomy@latest --version || true

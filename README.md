@@ -2,20 +2,37 @@
 
 High-autonomy OpenCode configuration — maximize independent progress, minimize back-and-forth. Turns vague ideas into working, tested, lint-clean implementations without stopping.
 
-## 🚀 One-Shot Prompt — copy/paste to your opencode
+## 🚀 One-Shot Prompt — copy/paste to your opencode (clean, no bloat)
 
 ```
-Clone https://github.com/vocino/opencode-autonomy.git to /tmp/opencode-autonomy
-and implement it: run ./install.sh logic (backup opencode.json → .bak.<ts>, merge
-autonomy keys from opencode.json.example, copy agents/*.md and commands/*.md,
-install AGENTS.md.example if missing), validate with `opencode debug config`,
-adapt to my OS/shell/tooling. Report what changed + what verified, note
-assumptions, remind to restart opencode. Do NOT commit secrets.
+You are implementing vocino/opencode-autonomy with a CLEAN end state — no leftover clones, no stale agents/commands/templates from old versions, no backup bloat:
+
+1. PREP: rm -rf /tmp/opencode-autonomy
+2. CLONE: git clone https://github.com/vocino/opencode-autonomy.git /tmp/opencode-autonomy
+3. INSTALL CLEAN: cd /tmp/opencode-autonomy && ./install.sh --clean
+   Requirements for --clean (must implement if not present):
+   - Backup ~/.config/opencode/opencode.json → .bak.<ts> then prune to last 3 backups
+   - Merge autonomy keys from opencode.json.example (preserve model/provider/openrouter keys, default to openrouter/ if missing)
+   - SYNC agents/*.md → ~/.config/opencode/agents/ EXACTLY (delete .md/.sh in dest not in current repo when --clean)
+   - SYNC commands/*.md → ~/.config/opencode/commands/ EXACTLY (same stale removal)
+   - SYNC templates/ → ~/.config/opencode/templates/ EXACTLY (rm -rf dest/templates then copy fresh)
+   - SYNC scripts/*.sh → ~/.config/opencode/scripts/ EXACTLY
+   - Install AGENTS.md.example → ~/.config/opencode/AGENTS.md only if missing
+   - Validate: opencode debug config must pass, else restore backup and fail
+4. VERIFY NO BLOAT:
+   - ~/.config/opencode/agents/ must contain ONLY files that exist in repo's agents/ (no old leftovers)
+   - Same for commands/, templates/ship/, scripts/
+   - ~/.config/opencode/opencode.json.bak.* count <=3
+   - No node_modules, no .opencode/ inside clone left behind
+5. FINAL CLEANUP: rm -rf /tmp/opencode-autonomy after success
+   Report: what changed, what cleaned (stale files, pruned backups), what verified (ls dest, backup count, debug config), assumptions, reminder to restart opencode (quit + opencode). Do NOT commit secrets. Do NOT leave /tmp/opencode-autonomy.
+
+If anything about clean sync is missing in install.sh, ADD it (prune backups to 3, delete stale files when --clean).
 ```
 
-**Already cloned?** Just `/ship Implement this repo for my setup: ./install.sh + validate`
+**Already cloned?** Just `/ship Clean implement: ./install.sh --clean + verify no bloat + rm -rf /tmp/opencode-autonomy if exists`
 
-`install.sh` is canonical — the prompt above just points to it so it never drifts.
+`install.sh --clean` is canonical — prompt points to it so it never drifts. Without --clean it merges; with --clean it guarantees dest matches repo exactly.
 
 ## What this is
 
@@ -40,22 +57,23 @@ Stop ONLY when complete+verified, true blocker, or looping same error 3x.
 
 ## Quick Start
 
-### 1. Clone and install
+### 1. Clone and install (bloat-free)
 
 ```bash
 git clone https://github.com/vocino/opencode-autonomy.git
 cd opencode-autonomy
-./install.sh
-# or manually: see MANUAL INSTALL below
+./install.sh --clean   # ensures no stale files from old versions, prunes backups to last 3
+# or: ./install.sh      # merge mode (keeps custom files, does not delete stale)
+# manual: see MANUAL INSTALL below
 ```
 
 `install.sh` will:
-- Backup existing `~/.config/opencode/opencode.json` → `opencode.json.bak.<timestamp>`
+- Backup existing `~/.config/opencode/opencode.json` → `opencode.json.bak.<timestamp>` (and prune to last 3 when --clean)
 - Merge high-autonomy settings into your config (or create new), preserving your model/provider
-- Copy agents to `~/.config/opencode/agents/`
-- Copy commands to `~/.config/opencode/commands/`
-- Copy templates to `~/.config/opencode/templates/`
-- Copy helper scripts to `~/.config/opencode/scripts/`
+- Sync agents to `~/.config/opencode/agents/` (with --clean: exact match, deletes stale files not in repo)
+- Sync commands to `~/.config/opencode/commands/` (same)
+- Sync templates to `~/.config/opencode/templates/` (with --clean: rm -rf then copy fresh)
+- Sync helper scripts to `~/.config/opencode/scripts/` (same)
 - Copy `AGENTS.md.example` → `~/.config/opencode/AGENTS.md` if you don't have one
 
 ### 2. Restart opencode

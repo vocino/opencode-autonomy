@@ -145,6 +145,40 @@ backup_files=("$dest"/opencode.json.bak.*)
 (( ${#backup_files[@]} > 0 )) || fail "Expected config backup files after merge install"
 pass "Install merge smoke test passed"
 
+info "Running install --clean bloat-free test..."
+# Create stale files that simulate old versions left behind
+echo "# stale" > "$dest/agents/old-stale-agent.md"
+echo "# stale" > "$dest/commands/old-stale-cmd.md"
+echo "# stale" > "$dest/templates/old-bloat-template.md"
+echo "# stale" > "$dest/scripts/old-bloat.sh"
+# Create extra backups to test pruning (total 5+)
+for i in 1 2 3 4 5; do
+  touch "$dest/opencode.json.bak.$i"
+  sleep 0.01
+done
+XDG_CONFIG_HOME="$tmp_root" ./install.sh --clean >>"$install_log" 2>&1
+
+# Stale files must be gone after --clean
+[[ ! -f "$dest/agents/old-stale-agent.md" ]] || fail "--clean should remove stale agent old-stale-agent.md"
+[[ ! -f "$dest/commands/old-stale-cmd.md" ]] || fail "--clean should remove stale command old-stale-cmd.md"
+[[ ! -f "$dest/templates/old-bloat-template.md" ]] || fail "--clean should remove stale template old-bloat-template.md"
+[[ ! -f "$dest/scripts/old-bloat.sh" ]] || fail "--clean should remove stale script old-bloat.sh"
+
+# Backup pruning: should keep <=3
+backup_files=("$dest"/opencode.json.bak.*)
+(( ${#backup_files[@]} <= 3 )) || fail "--clean should prune backups to <=3, found ${#backup_files[@]}"
+
+# Exact sync: dest agents must equal src agents
+src_agent_count=$(ls "$ROOT_DIR"/agents/*.md 2>/dev/null | wc -l)
+dest_agent_count=$(ls "$dest"/agents/*.md 2>/dev/null | wc -l)
+[[ "$src_agent_count" -eq "$dest_agent_count" ]] || fail "After --clean, agent count should match src ($src_agent_count) vs dest ($dest_agent_count)"
+
+src_cmd_count=$(ls "$ROOT_DIR"/commands/*.md 2>/dev/null | wc -l)
+dest_cmd_count=$(ls "$dest"/commands/*.md 2>/dev/null | wc -l)
+[[ "$src_cmd_count" -eq "$dest_cmd_count" ]] || fail "After --clean, command count should match src ($src_cmd_count) vs dest ($dest_cmd_count)"
+
+pass "Install --clean bloat-free test passed (stale removal + backup pruning)"
+
 if command -v opencode >/dev/null 2>&1; then
   info "Validating generated config with opencode debug config..."
   if XDG_CONFIG_HOME="$tmp_root" opencode debug config >/dev/null 2>&1; then

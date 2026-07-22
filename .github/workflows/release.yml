@@ -35,20 +35,18 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org/
           cache: npm
+
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest && npm --version
 
       - run: npm ci || npm install
       - run: npm run build
 
-      - name: Publish to npm (OIDC trusted publisher)
+      - name: Publish to npm (OIDC trusted publisher - release.yml)
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          # Configure ONE trusted publisher at https://www.npmjs.com/package/opencode-autonomy/access:
-          # Repo: vocino/opencode-autonomy, Workflow: release.yml
-          # That's enough for both auto (release-please) and manual v* tags.
 
       - run: |
           sleep 5

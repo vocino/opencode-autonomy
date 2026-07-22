@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/vocino/opencode-autonomy/compare/v0.2.2...v0.2.3) (2026-07-22)
+
+
+### Bug Fixes
+
+* **ci:** use node 24 + npm at latest for OIDC trusted publishing ([efdf649](https://github.com/vocino/opencode-autonomy/commit/efdf6498b0290345e61d5ec180a9b47f72a3163d))
+
 ## [0.2.2](https://github.com/vocino/opencode-autonomy/compare/v0.2.1...v0.2.2) (2026-07-22)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/vocino/opencode-autonomy/compare/v0.2.1...v0.2.2) (2026-07-22)
+
+
+### Bug Fixes
+
+* **ci:** single trusted publisher - merge tag publish into release.yml ([7648059](https://github.com/vocino/opencode-autonomy/commit/764805907320938ec09aa021f404824014de772b))
+
 ## [0.2.1](https://github.com/vocino/opencode-autonomy/compare/v0.2.0...v0.2.1) (2026-07-22)
 
 

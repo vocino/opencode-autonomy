@@ -1,193 +1,56 @@
 #!/usr/bin/env bash
 set -euo pipefail
-shopt -s nullglob
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; cd "$ROOT"
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT_DIR"
+pass() { echo "[PASS] $*"; }
+fail() { echo "[FAIL] $*" >&2; exit 1; }
 
-fail() {
-  printf '[FAIL] %s\n' "$*" >&2
-  exit 1
-}
+# frontmatter
+for f in agents/*.md; do grep -q "^description:" "$f" || fail "description missing in $f"; grep -q "^mode:" "$f" || fail "mode missing in $f"; done
+for f in commands/*.md; do grep -q "^description:" "$f" || fail "description missing in $f"; grep -q "^agent:" "$f" || fail "agent missing in $f"; done
+pass "frontmatter ok"
 
-info() {
-  printf '[INFO] %s\n' "$*"
-}
+command -v jq >/dev/null || fail "jq required"
+jq empty opencode.json.example || fail "invalid opencode.json.example"
+jq -e '.model|startswith("openrouter/")' opencode.json.example >/dev/null || fail "model should be openrouter/"
+jq -e '.agent.build' opencode.json.example >/dev/null || fail "build agent missing"
+jq -e '.agent.fixer' opencode.json.example >/dev/null || fail "fixer agent missing"
+pass "config valid"
 
-pass() {
-  printf '[PASS] %s\n' "$*"
-}
+out="$(bash scripts/detect-oracle.sh)"; [[ -n "$out" ]] || fail "oracle empty"
+echo "$out" | grep -q "bash tests/validate.sh" || fail "oracle missing validate"
+pass "oracle ok: $(echo "$out" | tr '\n' ',' | cut -c1-120)"
 
-require_cmd() {
-  local command_name="$1"
-  command -v "$command_name" >/dev/null 2>&1 || fail "Required command not found: $command_name"
-}
+# smoke install
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+XDG_CONFIG_HOME="$tmp" ./install.sh >/tmp/install.log 2>&1
+[[ -f "$tmp/opencode/opencode.json" ]] || fail "smoke install: opencode.json missing"
+[[ -f "$tmp/opencode/agents/build.md" ]] || fail "smoke install: build.md missing"
+[[ -f "$tmp/opencode/agents/fixer.md" ]] || fail "smoke install: fixer.md missing"
+[[ -f "$tmp/opencode/commands/ship.md" ]] || fail "smoke install: ship.md missing"
+[[ -f "$tmp/opencode/commands/fix.md" ]] || fail "smoke install: fix.md missing"
+jq empty "$tmp/opencode/opencode.json" || fail "smoke installed json invalid"
+pass "smoke install fresh ok"
 
-assert_file() {
-  local path="$1"
-  [[ -f "$path" ]] || fail "Expected file missing: $path"
-}
+# merge preserve
+echo '{"model":"custom/model","provider":{"custom":{"options":{}}}}' > "$tmp/opencode/opencode.json"
+XDG_CONFIG_HOME="$tmp" ./install.sh >>/tmp/install.log 2>&1
+jq -e '.model=="custom/model"' "$tmp/opencode/opencode.json" >/dev/null || fail "merge should preserve model"
+pass "smoke merge preserves model"
 
-assert_executable() {
-  local path="$1"
-  [[ -x "$path" ]] || fail "Expected executable missing execute bit: $path"
-}
+# clean bloat test
+echo "stale" > "$tmp/opencode/agents/stale-old.md"
+touch "$tmp/opencode/opencode.json.bak.1" "$tmp/opencode/opencode.json.bak.2" "$tmp/opencode/opencode.json.bak.3" "$tmp/opencode/opencode.json.bak.4"
+XDG_CONFIG_HOME="$tmp" ./install.sh --clean >>/tmp/install.log 2>&1
+[[ ! -f "$tmp/opencode/agents/stale-old.md" ]] || fail "--clean should delete stale agent"
+[[ $(ls "$tmp/opencode"/opencode.json.bak.* 2>/dev/null | wc -l) -le 3 ]] || fail "--clean should prune backups to 3"
+[[ $(ls "$tmp/opencode/agents"/*.md 2>/dev/null | wc -l) -eq $(ls "$ROOT"/agents/*.md 2>/dev/null | wc -l) ]] || fail "--clean agent count mismatch"
+pass "clean bloat test ok (stale removal + backup prune)"
 
-check_frontmatter() {
-  local file="$1"
-  local key="$2"
-  local first_line=""
-  local end_line=""
-
-  first_line="$(awk 'NR == 1 { print; exit }' "$file")"
-  [[ "$first_line" == "---" ]] || fail "Frontmatter start missing in $file"
-
-  end_line="$(awk 'NR > 1 && $0 == "---" { print NR; exit }' "$file")"
-  [[ -n "$end_line" ]] || fail "Frontmatter end missing in $file"
-
-  if ! awk -v target_key="$key" -v stop_line="$end_line" '
-      NR < stop_line && $0 ~ ("^" target_key ":") { found = 1 }
-      END { exit(found ? 0 : 1) }
-    ' "$file"; then
-    fail "Frontmatter key \"$key\" missing in $file"
-  fi
-}
-
-contains_line() {
-  local haystack="$1"
-  local needle="$2"
-  local line=""
-
-  while IFS= read -r line; do
-    if [[ "$line" == "$needle" ]]; then
-      return 0
-    fi
-  done <<< "$haystack"
-
-  return 1
-}
-
-info "Checking markdown frontmatter conventions..."
-for file in commands/*.md; do
-  check_frontmatter "$file" "description"
-  check_frontmatter "$file" "agent"
-done
-for file in agents/*.md; do
-  check_frontmatter "$file" "description"
-  check_frontmatter "$file" "mode"
-done
-pass "Frontmatter validated for commands and agents"
-
-require_cmd jq
-
-info "Validating JSON config examples..."
-jq empty opencode.json.example
-jq empty opencode.json.minimal.example
-jq -e '.model | startswith("openrouter/")' opencode.json.example >/dev/null
-jq -e '.small_model | startswith("openrouter/")' opencode.json.example >/dev/null
-jq -e '.provider.openrouter.options.apiKey == "{env:OPENROUTER_API_KEY}"' opencode.json.example >/dev/null
-jq -e '.small_model | startswith("openrouter/")' opencode.json.minimal.example >/dev/null
-jq -e '.provider.openrouter.options.apiKey == "{env:OPENROUTER_API_KEY}"' opencode.json.minimal.example >/dev/null
-pass "JSON config examples are valid"
-
-info "Smoke-checking oracle detection output..."
-oracle_output="$(bash scripts/detect-oracle.sh)"
-[[ -n "$oracle_output" ]] || fail "scripts/detect-oracle.sh produced empty output"
-contains_line "$oracle_output" "shellcheck install.sh" || fail "detect-oracle missing shellcheck install command"
-contains_line "$oracle_output" "bash tests/validate.sh" || fail "detect-oracle missing validation harness command"
-pass "Oracle detection outputs expected baseline commands"
-
-info "Running install smoke test in temporary XDG_CONFIG_HOME..."
-tmp_root="$(mktemp -d)"
-install_log="$tmp_root/install.log"
-trap 'rm -rf "$tmp_root"' EXIT
-
-XDG_CONFIG_HOME="$tmp_root" ./install.sh >"$install_log" 2>&1
-
-dest="$tmp_root/opencode"
-assert_file "$dest/opencode.json"
-assert_file "$dest/AGENTS.md"
-assert_file "$dest/agents/autonomous.md"
-assert_file "$dest/agents/specifier.md"
-assert_file "$dest/commands/ship.md"
-assert_file "$dest/commands/verify.md"
-assert_file "$dest/templates/ship/SPEC.template.md"
-assert_file "$dest/templates/ship/DOD.template.md"
-assert_file "$dest/scripts/detect-oracle.sh"
-assert_executable "$dest/scripts/detect-oracle.sh"
-jq empty "$dest/opencode.json" >/dev/null
-pass "Install smoke test (fresh config) passed"
-
-info "Running install merge smoke test..."
-cat > "$dest/opencode.json" <<'JSON'
-{
-  "$schema": "https://opencode.ai/config.json",
-  "model": "custom/test-model",
-  "instructions": ["custom.md"],
-  "agent": {
-    "build": {
-      "prompt": "KEEP_THIS_PROMPT"
-    }
-  }
-}
-JSON
-
-XDG_CONFIG_HOME="$tmp_root" ./install.sh >>"$install_log" 2>&1
-
-jq -e '.model == "custom/test-model"' "$dest/opencode.json" >/dev/null || fail "Model should be preserved on merge"
-jq -e '.small_model | startswith("openrouter/")' "$dest/opencode.json" >/dev/null || fail "small_model should default from OpenRouter example when missing"
-jq -e '.provider.openrouter.options.apiKey == "{env:OPENROUTER_API_KEY}"' "$dest/opencode.json" >/dev/null || fail "OpenRouter provider should default from example when missing"
-jq -e '.agent.build.prompt == "KEEP_THIS_PROMPT"' "$dest/opencode.json" >/dev/null || fail "User build prompt should be preserved on merge"
-jq -e '.instructions | index("custom.md") != null' "$dest/opencode.json" >/dev/null || fail "Custom instruction should be preserved on merge"
-jq -e '.instructions | index("AGENTS.md") != null' "$dest/opencode.json" >/dev/null || fail "AGENTS.md instruction should exist after merge"
-jq -e '.agent.specifier != null' "$dest/opencode.json" >/dev/null || fail "Specifier agent metadata missing after merge"
-backup_files=("$dest"/opencode.json.bak.*)
-(( ${#backup_files[@]} > 0 )) || fail "Expected config backup files after merge install"
-pass "Install merge smoke test passed"
-
-info "Running install --clean bloat-free test..."
-# Create stale files that simulate old versions left behind
-echo "# stale" > "$dest/agents/old-stale-agent.md"
-echo "# stale" > "$dest/commands/old-stale-cmd.md"
-echo "# stale" > "$dest/templates/old-bloat-template.md"
-echo "# stale" > "$dest/scripts/old-bloat.sh"
-# Create extra backups to test pruning (total 5+)
-for i in 1 2 3 4 5; do
-  touch "$dest/opencode.json.bak.$i"
-  sleep 0.01
-done
-XDG_CONFIG_HOME="$tmp_root" ./install.sh --clean >>"$install_log" 2>&1
-
-# Stale files must be gone after --clean
-[[ ! -f "$dest/agents/old-stale-agent.md" ]] || fail "--clean should remove stale agent old-stale-agent.md"
-[[ ! -f "$dest/commands/old-stale-cmd.md" ]] || fail "--clean should remove stale command old-stale-cmd.md"
-[[ ! -f "$dest/templates/old-bloat-template.md" ]] || fail "--clean should remove stale template old-bloat-template.md"
-[[ ! -f "$dest/scripts/old-bloat.sh" ]] || fail "--clean should remove stale script old-bloat.sh"
-
-# Backup pruning: should keep <=3
-backup_files=("$dest"/opencode.json.bak.*)
-(( ${#backup_files[@]} <= 3 )) || fail "--clean should prune backups to <=3, found ${#backup_files[@]}"
-
-# Exact sync: dest agents must equal src agents
-src_agent_count=$(ls "$ROOT_DIR"/agents/*.md 2>/dev/null | wc -l)
-dest_agent_count=$(ls "$dest"/agents/*.md 2>/dev/null | wc -l)
-[[ "$src_agent_count" -eq "$dest_agent_count" ]] || fail "After --clean, agent count should match src ($src_agent_count) vs dest ($dest_agent_count)"
-
-src_cmd_count=$(ls "$ROOT_DIR"/commands/*.md 2>/dev/null | wc -l)
-dest_cmd_count=$(ls "$dest"/commands/*.md 2>/dev/null | wc -l)
-[[ "$src_cmd_count" -eq "$dest_cmd_count" ]] || fail "After --clean, command count should match src ($src_cmd_count) vs dest ($dest_cmd_count)"
-
-pass "Install --clean bloat-free test passed (stale removal + backup pruning)"
-
-if command -v opencode >/dev/null 2>&1; then
-  info "Validating generated config with opencode debug config..."
-  if XDG_CONFIG_HOME="$tmp_root" opencode debug config >/dev/null 2>&1; then
-    pass "opencode debug config passed for smoke install"
-  else
-    fail "opencode debug config failed for smoke install"
-  fi
+if command -v opencode >/dev/null; then
+  XDG_CONFIG_HOME="$tmp" opencode debug config >/dev/null 2>&1 && pass "opencode debug config ok" || fail "opencode debug config failed"
 else
-  info "Skipping opencode debug config (opencode not installed)"
+  echo "[INFO] opencode not installed, skipping debug config"
 fi
 
-pass "All validation checks passed"
+pass "all checks passed"

@@ -1,125 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
+ROOT="${1:-$(pwd)}"; cd "$ROOT"
+declare -a ORACLES=()
 
-ROOT_DIR="${1:-$(pwd)}"
+add() { [[ -z "${1:-}" ]] && return 0; for e in "${ORACLES[@]}"; do [[ "$e" == "$1" ]] && return 0; done; ORACLES+=("$1"); }
 
-if [[ ! -d "$ROOT_DIR" ]]; then
-  printf 'error: directory not found: %s\n' "$ROOT_DIR" >&2
-  exit 1
-fi
-
-cd "$ROOT_DIR"
-
-declare -a ORACLE_COMMANDS=()
-
-add_oracle() {
-  local candidate="$1"
-  local existing=""
-
-  if [[ -z "$candidate" ]]; then
-    return 0
+has_script() {
+  [[ -f package.json ]] || return 1
+  if command -v jq >/dev/null; then jq -e --arg s "$1" '.scripts[$s] != null' package.json >/dev/null 2>&1
+  else grep -q "\"$1\"" package.json
   fi
-
-  for existing in "${ORACLE_COMMANDS[@]}"; do
-    if [[ "$existing" == "$candidate" ]]; then
-      return 0
-    fi
-  done
-
-  ORACLE_COMMANDS+=("$candidate")
-}
-
-has_package_script() {
-  local script_name="$1"
-
-  if [[ ! -f package.json ]]; then
-    return 1
-  fi
-
-  if command -v jq >/dev/null 2>&1; then
-    jq -e --arg script "$script_name" '.scripts[$script] != null' package.json >/dev/null 2>&1
-    return $?
-  fi
-
-  rg -q "\"${script_name}\"[[:space:]]*:" package.json
 }
 
 if [[ -f package.json ]]; then
-  if has_package_script "lint"; then
-    add_oracle "npm run lint"
-  fi
-  if has_package_script "typecheck"; then
-    add_oracle "npm run typecheck"
-  elif has_package_script "types"; then
-    add_oracle "npm run types"
-  fi
-  if has_package_script "test"; then
-    add_oracle "npm test"
-  elif has_package_script "test:ci"; then
-    add_oracle "npm run test:ci"
-  fi
-  if has_package_script "build"; then
-    add_oracle "npm run build"
-  fi
+  has_script lint && add "npm run lint"
+  has_script typecheck && add "npm run typecheck" || has_script types && add "npm run types"
+  has_script test && add "npm test" || has_script test:ci && add "npm run test:ci"
+  has_script build && add "npm run build"
 fi
 
-if [[ -f pyproject.toml ]]; then
-  if rg -q "\[tool\.ruff" pyproject.toml; then
-    add_oracle "uv run ruff check ."
-  fi
-  if rg -q "\[tool\.mypy" pyproject.toml; then
-    add_oracle "uv run mypy ."
-  fi
-  if rg -q "\[tool\.pytest" pyproject.toml || rg -q "pytest" pyproject.toml; then
-    add_oracle "uv run pytest"
-  fi
-fi
+[[ -f pyproject.toml ]] && { grep -q "ruff\|pytest\|mypy" pyproject.toml && { add "uv run ruff check ."; add "uv run mypy ."; add "uv run pytest"; }; }
+[[ -f Makefile ]] && { grep -q "^lint:" Makefile && add "make lint"; grep -q "^test:" Makefile && add "make test"; grep -q "^build:" Makefile && add "make build"; }
+[[ -f Cargo.toml ]] && { add "cargo test"; add "cargo clippy --all-targets --all-features -- -D warnings"; }
+[[ -f go.mod ]] && add "go test ./..."
 
-if [[ -f Makefile ]]; then
-  if rg -q "^lint:" Makefile; then
-    add_oracle "make lint"
-  fi
-  if rg -q "^test:" Makefile; then
-    add_oracle "make test"
-  fi
-  if rg -q "^build:" Makefile; then
-    add_oracle "make build"
-  fi
-fi
+# repo self-checks
+[[ -f install.sh ]] && add "shellcheck install.sh"
+[[ -f scripts/detect-oracle.sh ]] && add "shellcheck scripts/detect-oracle.sh"
+[[ -f tests/validate.sh ]] && add "bash tests/validate.sh"
+[[ -f opencode.json.example ]] && command -v jq >/dev/null && add "jq empty opencode.json.example"
 
-if [[ -f Cargo.toml ]]; then
-  add_oracle "cargo test"
-  add_oracle "cargo clippy --all-targets --all-features -- -D warnings"
-fi
-
-if [[ -f go.mod ]]; then
-  add_oracle "go test ./..."
-fi
-
-# Repo-level fallback checks
-if [[ -f install.sh ]]; then
-  add_oracle "shellcheck install.sh"
-fi
-
-if [[ -f scripts/detect-oracle.sh ]]; then
-  add_oracle "shellcheck scripts/detect-oracle.sh"
-fi
-
-if [[ -f tests/validate.sh ]]; then
-  add_oracle "bash tests/validate.sh"
-fi
-
-if [[ -f opencode.json.example ]] && command -v jq >/dev/null 2>&1; then
-  add_oracle "jq empty opencode.json.example"
-fi
-
-if [[ -f opencode.json.minimal.example ]] && command -v jq >/dev/null 2>&1; then
-  add_oracle "jq empty opencode.json.minimal.example"
-fi
-
-if ((${#ORACLE_COMMANDS[@]} == 0)); then
-  printf '%s\n' "echo 'No oracle commands detected. Add command checks to 02-dod.md.'"
-  exit 0
-fi
-
-printf '%s\n' "${ORACLE_COMMANDS[@]}"
+(( ${#ORACLES[@]} == 0 )) && { echo "echo 'No oracle commands detected'"; exit 0; }
+printf '%s\n' "${ORACLES[@]}"

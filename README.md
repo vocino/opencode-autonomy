@@ -9,6 +9,18 @@ High-autonomy config for [opencode](https://opencode.ai) — one obvious way to 
 2. One fixer subagent that closes the loop: lint → type → test → build → fix → rerun.
 3. One command `/ship` that runs concept → plan → implement → verify → fix → report.
 
+## Model strategy — 5 models, 5 families
+
+One strong default does 80% of work. Subagents are cheap and different to catch blind spots. No duplicate models with different knobs.
+
+- `meta/muse-spark-1.1` (Meta, custom API) → `build` primary, 300 steps, 1M context, reasoning — does 80%
+- `openrouter/google/gemini-flash-latest` (Google) → `small_model`, cheap title/summary
+- `openrouter/anthropic/claude-sonnet-4-5` (Anthropic) → `fixer`, strong repair
+- `openrouter/qwen/qwen3-coder` (Qwen) → `explore`, code search specialist
+- `openrouter/openai/gpt-4o-mini` (OpenAI) → `plan`, cheap planning with different blind spot
+
+Providers: `meta` via `{file:~/.config/opencode/meta-api-key}` (custom API), `openrouter` via `{env:OPENROUTER_API_KEY}`. Two keys, five families.
+
 ## Install (trivial, verifiable)
 
 ```bash
@@ -26,30 +38,29 @@ opencode debug config  # must pass
 /fix Settings crashes when email empty
 ```
 
-- Tab cycles agents: `build` (primary) ↔ `plan` (read-only, built-in)
-- `@explore` parallel search, `@fixer` explicit fix delegation
+- Tab cycles: `build` (meta/spark) ↔ `plan` (openai/gpt-4o-mini)
+- `@explore` (qwen coder) parallel search, `@fixer` (anthropic sonnet) explicit fix
 
 ## What you get
 
 ```
 agents/
-  build.md    → primary, 300 steps, ships end-to-end
-  fixer.md    → subagent, closes lint/type/test loop
+  build.md    → primary, 300 steps, meta/muse-spark-1.1, ships end-to-end
+  fixer.md    → subagent, anthropic sonnet, closes lint/type/test loop
 
 commands/
   ship.md     → closed-loop: concept → plan → batch implement → verify → fix → report
   fix.md      → quick repair with verification loop
 
-opencode.json.example → 8 keys that matter: subagent_depth=3, formatter, lsp, permission=allow, batch_tool, tool_output 5k/200k, compaction tail 12, agent steps
-
+opencode.json.example → 5 models: meta strong default + 4 openrouter specialists (google flash, anthropic sonnet, qwen coder, openai mini)
 scripts/detect-oracle.sh → infers oracle commands from package.json/Makefile
 ```
 
-3 files to understand system: `README.md`, `opencode.json.example`, `commands/ship.md` — <5 min.
+3 files to understand: `README.md`, `opencode.json.example`, `commands/ship.md` — <5 min.
 
 ## Config
 
-`opencode.json.example` is canonical. Install merges it into your existing `~/.config/opencode/opencode.json`, preserving your `model` and `provider` keys.
+`opencode.json.example` is canonical. Install merges autonomy keys into your existing config, preserving your `model` and `provider`.
 
 Core tuning:
 - `subagent_depth: 3` → allows `build → explore → fixer` chains
@@ -59,7 +70,7 @@ Core tuning:
 - `compaction.tail_turns: 12` → long session survival
 - `batch_tool: true` → parallel discovery + edits
 
-Set `OPENROUTER_API_KEY` or edit `model` in config. Docs: https://opencode.ai/docs
+Docs: https://opencode.ai/docs
 
 ## One-shot prompt for opencode
 
@@ -77,7 +88,7 @@ You are implementing vocino/opencode-autonomy clean:
 ```bash
 jq empty opencode.json.example
 bash scripts/detect-oracle.sh
-bash tests/validate.sh
+bash tests/validate.sh   # checks 5 distinct models, 5 families, no dup, smoke install
 ```
 
 ## License

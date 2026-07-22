@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "openrouter/anthropic/claude-sonnet-4-5",
+  "model": "meta/muse-spark-1.1",
   "small_model": "openrouter/google/gemini-flash-latest",
   "subagent_depth": 3,
   "snapshot": true,
@@ -10,11 +10,49 @@
   "compaction": { "auto": true, "tail_turns": 12, "reserved": 20000 },
   "experimental": { "batch_tool": true, "continue_loop_on_deny": true },
   "permission": { "*": "allow", "external_directory": "allow", "doom_loop": "allow" },
-  "agent": {
-    "build": { "mode": "primary", "steps": 300, "temperature": 0.2 },
-    "fixer": { "mode": "subagent", "steps": 150, "temperature": 0.1 }
-  },
   "provider": {
-    "openrouter": { "options": { "apiKey": "{env:OPENROUTER_API_KEY}" } }
+    "meta": {
+      "npm": "@ai-sdk/openai",
+      "name": "Meta",
+      "options": {
+        "baseURL": "https://api.meta.ai/v1",
+        "apiKey": "{file:~/.config/opencode/meta-api-key}"
+      },
+      "models": {
+        "muse-spark-1.1": {
+          "name": "Muse Spark 1.1",
+          "reasoning": true,
+          "limit": { "context": 1048576, "output": 131072 }
+        }
+      }
+    },
+    "openrouter": {
+      "options": { "apiKey": "{env:OPENROUTER_API_KEY}" }
+    }
+  },
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "steps": 300,
+      "temperature": 0.2,
+      "model": "meta/muse-spark-1.1"
+    },
+    "fixer": {
+      "mode": "subagent",
+      "steps": 150,
+      "temperature": 0.1,
+      "model": "openrouter/anthropic/claude-sonnet-4-5"
+    },
+    "explore": {
+      "mode": "subagent",
+      "steps": 80,
+      "model": "openrouter/qwen/qwen3-coder"
+    },
+    "plan": {
+      "mode": "primary",
+      "steps": 100,
+      "model": "openrouter/openai/gpt-4o-mini",
+      "permission": { "bash": "ask", "edit": "ask", "write": "ask", "read": "allow", "glob": "allow", "grep": "allow", "list": "allow", "task": "allow", "external_directory": "allow" }
+    }
   }
 }

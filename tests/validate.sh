@@ -83,6 +83,11 @@ require_cmd jq
 info "Validating JSON config examples..."
 jq empty opencode.json.example
 jq empty opencode.json.minimal.example
+jq -e '.model | startswith("openrouter/")' opencode.json.example >/dev/null
+jq -e '.small_model | startswith("openrouter/")' opencode.json.example >/dev/null
+jq -e '.provider.openrouter.options.apiKey == "{env:OPENROUTER_API_KEY}"' opencode.json.example >/dev/null
+jq -e '.small_model | startswith("openrouter/")' opencode.json.minimal.example >/dev/null
+jq -e '.provider.openrouter.options.apiKey == "{env:OPENROUTER_API_KEY}"' opencode.json.minimal.example >/dev/null
 pass "JSON config examples are valid"
 
 info "Smoke-checking oracle detection output..."
@@ -130,6 +135,8 @@ JSON
 XDG_CONFIG_HOME="$tmp_root" ./install.sh >>"$install_log" 2>&1
 
 jq -e '.model == "custom/test-model"' "$dest/opencode.json" >/dev/null || fail "Model should be preserved on merge"
+jq -e '.small_model | startswith("openrouter/")' "$dest/opencode.json" >/dev/null || fail "small_model should default from OpenRouter example when missing"
+jq -e '.provider.openrouter.options.apiKey == "{env:OPENROUTER_API_KEY}"' "$dest/opencode.json" >/dev/null || fail "OpenRouter provider should default from example when missing"
 jq -e '.agent.build.prompt == "KEEP_THIS_PROMPT"' "$dest/opencode.json" >/dev/null || fail "User build prompt should be preserved on merge"
 jq -e '.instructions | index("custom.md") != null' "$dest/opencode.json" >/dev/null || fail "Custom instruction should be preserved on merge"
 jq -e '.instructions | index("AGENTS.md") != null' "$dest/opencode.json" >/dev/null || fail "AGENTS.md instruction should exist after merge"

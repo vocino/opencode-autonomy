@@ -8,3 +8,5 @@ Travis Vocino <travis@vocino.com> Cursor Agent <cursoragent@cursor.com>
 # Also squash any other generic AI bots if they ever touch it
 Travis Vocino <travis@vocino.com> <claude@anthropic.com>
 Travis Vocino <travis@vocino.com> <copilot@github.com>
+
+# cache-bust 2026-07-22T19:13:25Z - ensure single contributor

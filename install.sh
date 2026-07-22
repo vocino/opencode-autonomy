@@ -49,6 +49,9 @@ if [[ ! -f "$DEST_DIR/opencode.json" ]]; then
       .[1] as $example |
       $created
       | .default_agent = (.default_agent // $example.default_agent // "build")
+      | .model = (.model // $example.model // "openrouter/anthropic/claude-sonnet-4-5")
+      | .small_model = (.small_model // $example.small_model)
+      | .provider = ((.provider // {}) * ($example.provider // {}))
       | .instructions = ((.instructions // []) + ($example.instructions // []) | unique)
       | .agent = ((.agent // {}) * ($example.agent // {}))
     ' "$DEST_DIR/opencode.json" "$SRC_DIR/opencode.json.example" > "$TMP"
@@ -58,7 +61,7 @@ if [[ ! -f "$DEST_DIR/opencode.json" ]]; then
   fi
   echo
   info "Add your model, e.g.:"
-  echo "  { \"\$schema\": \"https://opencode.ai/config.json\", \"model\": \"anthropic/claude-sonnet-4-5\" }"
+  echo "  { \"\$schema\": \"https://opencode.ai/config.json\", \"model\": \"openrouter/anthropic/claude-sonnet-4-5\" }"
   echo
 else
   info "Merging autonomy settings into existing config..."
@@ -81,6 +84,8 @@ else
       ($existing * $autonomy)
       | .instructions = $merged_instructions
       | .default_agent = (.default_agent // $example.default_agent // "build")
+      | .small_model = (.small_model // $example.small_model)
+      | .provider = ((.provider // {}) * ($example.provider // {}))
       | .agent = (($existing.agent // {}) * ($example.agent // {}))
       | if $user_prompt != null then .agent.build.prompt = $user_prompt else . end
     ' "$DEST_DIR/opencode.json" "$SRC_DIR/opencode.json.example" > "$TMP"
@@ -190,6 +195,7 @@ fi
 echo
 ok "Done! Restart opencode (quit + opencode) to load new config"
 echo
+info "Set OPENROUTER_API_KEY before first run if not already set"
 info "Try: /ship Implement a hello world component"
 info "Try: /verify .opencode/state/ship/<run-id>"
 info "Agents: autonomous (300), ultrawork (400), build (200), specifier, fixer, reviewer"

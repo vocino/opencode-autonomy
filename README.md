@@ -96,7 +96,7 @@ Tab cycles primary agents: `build` ↔ `autonomous` ↔ `ultrawork` ↔ `plan`
 | `agent.build.steps` | ~80 | **200** | Long runs without forcing text-only |
 | `agent.autonomous.steps` | — | **300** | Full feature implementation |
 | `agent.ultrawork.steps` | — | **400** | Entire project builds / migrations |
-| `small_model` | none | `anthropic/claude-haiku-4-5` | Fast title/summary, cheap |
+| `small_model` | none | `openrouter/google/gemini-flash-latest` | Fast title/summary, cheap |
 | `tool_output.max_lines` | 2000 | **5000** | Full test/lint logs |
 | `tool_output.max_bytes` | 51200 | **204800** | Avoid truncation |
 | `compaction.tail_turns` | 2 | **12** | Keep 12 recent turns verbatim for long sessions |
@@ -122,6 +122,12 @@ Full configs: `opencode.json.example` (annotated) and `opencode.json.minimal.exa
   "agent": { "build": { "mode": "primary", "steps": 200 } }
 }
 ```
+
+### OpenRouter model routing
+
+`opencode.json.example` and `opencode.json.minimal.example` default to OpenRouter model IDs and
+`provider.openrouter.options.apiKey: {env:OPENROUTER_API_KEY}`. This keeps switching models simple:
+change `model` and/or `small_model` strings without changing provider wiring.
 
 ## Agents
 

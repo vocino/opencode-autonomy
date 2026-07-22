@@ -1,0 +1,10 @@
+# Force all AI / Cursor identities into main author so GitHub shows 1 contributor only
+Travis Vocino <travis@vocino.com> <cursoragent@cursor.com>
+Travis Vocino <travis@vocino.com> cursoragent <cursoragent@cursor.com>
+Travis Vocino <travis@vocino.com> <cursoragent@cursor.sh>
+Travis Vocino <travis@vocino.com> Cursor <cursoragent@cursor.com>
+Travis Vocino <travis@vocino.com> <cursor@cursor.com>
+Travis Vocino <travis@vocino.com> Cursor Agent <cursoragent@cursor.com>
+# Also squash any other generic AI bots if they ever touch it
+Travis Vocino <travis@vocino.com> <claude@anthropic.com>
+Travis Vocino <travis@vocino.com> <copilot@github.com>

@@ -1,0 +1,27 @@
+# Opencode cache + local state
+.opencode/
+tmp/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE cache (allow rules to enforce no AI attribution)
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/no-attribution.mdc
+.vscode/
+.idea/
+
+# Secrets (never commit keys)
+*.key
+.env
+.envrc
+openrouter.key
+meta-api-key
+cursor-*.key
+auth.json
+
+# Node
+node_modules/

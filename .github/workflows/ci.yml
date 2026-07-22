@@ -12,22 +12,58 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
       - name: Install deps
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y jq shellcheck
+          npm ci || npm install
 
       - name: Validate config
         run: |
           jq empty opencode.json.example
-          echo "✓ opencode.json.example valid JSON"
+          jq empty package.json
+          echo "✓ JSON valid"
+
+      - name: Typecheck
+        run: |
+          npx tsc -p tsconfig.json --noEmit
+          echo "✓ typecheck passed"
+
+      - name: Build
+        run: |
+          npm run build
+          ls -R dist
+          node --input-type=module -e "import p from './dist/plugin.js'; console.log('plugin ok'); const h = await p(); console.log('hooks', Object.keys(h))"
+          echo "✓ build + plugin load ok"
 
       - name: Shellcheck
         run: |
           shellcheck install.sh
           shellcheck scripts/detect-oracle.sh
+          # cli.mjs is node, not bash
           echo "✓ shellcheck passed"
 
       - name: Run tests
         run: |
           bash tests/validate.sh
+
+      - name: Test npx installer (dry-run + real)
+        run: |
+          node ./bin/cli.mjs --dry-run --dest /tmp/ci-autonomy
+          node ./bin/cli.mjs --dest /tmp/ci-autonomy
+          test -f /tmp/ci-autonomy/opencode.json
+          test -f /tmp/ci-autonomy/agents/build.md
+          test -f /tmp/ci-autonomy/commands/ship.md
+          cat /tmp/ci-autonomy/opencode.json | jq -e '.permission."*"=="allow"'
+          echo "✓ npx installer works"
+
+      - name: npm pack dry-run
+        run: |
+          npm pack --dry-run 2>&1 | grep -E "opencode-autonomy|dist|agents|commands|bin"
+          echo "✓ npm pack includes required files"

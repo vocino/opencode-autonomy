@@ -21,5 +21,7 @@ meta-api-key
 cursor-*.key
 auth.json
 
-# Node
+# Node + npm
 node_modules/
+dist/
+*.tgz

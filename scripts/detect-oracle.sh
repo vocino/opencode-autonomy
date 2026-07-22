@@ -14,8 +14,16 @@ has_script() {
 
 if [[ -f package.json ]]; then
   has_script lint && add "npm run lint"
-  has_script typecheck && add "npm run typecheck" || has_script types && add "npm run types"
-  has_script test && add "npm test" || has_script test:ci && add "npm run test:ci"
+  if has_script typecheck; then
+    add "npm run typecheck"
+  elif has_script types; then
+    add "npm run types"
+  fi
+  if has_script test; then
+    add "npm test"
+  elif has_script test:ci; then
+    add "npm run test:ci"
+  fi
   has_script build && add "npm run build"
 fi
 

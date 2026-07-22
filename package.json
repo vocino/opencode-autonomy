@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "opencode-autonomy",
+  "version": "0.2.0",
+  "description": "Autonomy-first opencode suite — ships features end-to-end without babysitting. Agents, commands, and opinionated config for long-horizon coding.",
+  "type": "module",
+  "license": "MIT",
+  "author": "vocino",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vocino/opencode-autonomy.git"
+  },
+  "homepage": "https://github.com/vocino/opencode-autonomy#readme",
+  "bugs": {
+    "url": "https://github.com/vocino/opencode-autonomy/issues"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "autonomy",
+    "ai",
+    "coding-agent",
+    "ship",
+    "agent",
+    "claude",
+    "spark"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": {
+    "opencode-autonomy": "bin/cli.mjs"
+  },
+  "main": "./dist/plugin.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "agents/",
+    "commands/",
+    "scripts/",
+    "opencode.json.example",
+    "bin/",
+    "install.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build",
+    "test": "bash tests/validate.sh",
+    "lint": "shellcheck install.sh scripts/detect-oracle.sh && echo ok"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.18.4",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -152,12 +152,11 @@ else
   info "  diff -u $DEST_DIR/AGENTS.md $SRC_DIR/AGENTS.md.example | head -80"
 fi
 
-# 7.5 Cursor no-attribution rule + git hooks (prevent AI branding in commits)
-if [[ -f "$SRC_DIR/.cursor/rules/no-attribution.mdc" ]]; then
-  # Copy as template for users to reference
+# 7.5 Cursor no-attribution rule (optional template, repo itself is opencode-only)
+if [[ -f "$SRC_DIR/templates/cursor/no-attribution.mdc" ]]; then
   mkdir -p "$DEST_TEMPLATES/cursor"
-  cp "$SRC_DIR/.cursor/rules/no-attribution.mdc" "$DEST_TEMPLATES/cursor/no-attribution.mdc"
-  ok "Installed cursor no-attribution rule template → $DEST_TEMPLATES/cursor/no-attribution.mdc"
+  cp "$SRC_DIR/templates/cursor/no-attribution.mdc" "$DEST_TEMPLATES/cursor/no-attribution.mdc"
+  ok "Installed cursor no-attribution rule template → $DEST_TEMPLATES/cursor/no-attribution.mdc (optional, for repos that also use Cursor)"
   info "  To use in a project: mkdir -p .cursor/rules && cp ~/.config/opencode/templates/cursor/no-attribution.mdc .cursor/rules/"
 fi
 

@@ -7,10 +7,8 @@ tmp/
 .DS_Store
 Thumbs.db
 
-# Editor / IDE cache (allow rules to enforce no AI attribution)
-.cursor/*
-!.cursor/rules/
-!.cursor/rules/no-attribution.mdc
+# Editor / IDE cache
+.cursor/
 .vscode/
 .idea/
 

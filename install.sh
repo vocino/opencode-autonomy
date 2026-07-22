@@ -16,6 +16,7 @@ echo "[INFO] $SRC -> $DEST (clean=$CLEAN)"
 if [[ -f "$DEST/opencode.json" ]]; then
   cp "$DEST/opencode.json" "$DEST/opencode.json.bak.$(date +%s)"
   if [[ $CLEAN -eq 1 ]]; then
+    # shellcheck disable=SC2012
     ls -t "$DEST"/opencode.json.bak.* 2>/dev/null | tail -n +$((KEEP+1)) | xargs -r rm -f || true
   fi
 fi
@@ -42,6 +43,7 @@ sync_dir() {
   local pattern="$1" dest="$2"
   local cnt=0
   shopt -s nullglob
+  # shellcheck disable=SC2206
   local files=($pattern)
   for f in "${files[@]}"; do
     cp "$f" "$dest/"

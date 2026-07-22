@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq shellcheck
+
+      - name: Validate config
+        run: |
+          jq empty opencode.json.example
+          echo "✓ opencode.json.example valid JSON"
+
+      - name: Shellcheck
+        run: |
+          shellcheck install.sh
+          shellcheck scripts/detect-oracle.sh
+          echo "✓ shellcheck passed"
+
+      - name: Run tests
+        run: |
+          bash tests/validate.sh

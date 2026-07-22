@@ -2,60 +2,44 @@
 
 [![CI](https://github.com/vocino/opencode-autonomy/actions/workflows/ci.yml/badge.svg)](https://github.com/vocino/opencode-autonomy/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![opencode](https://img.shields.io/badge/powered%20by-opencode-black)](https://opencode.ai)
-[![GitHub stars](https://img.shields.io/github/stars/vocino/opencode-autonomy?style=social)](https://github.com/vocino/opencode-autonomy/stargazers)
 
-### One command to ship. No hand-holding.
-
-**High-autonomy config for [opencode](https://opencode.ai) — your AI agent that actually finishes the job end-to-end: concept → plan → batch implement → verify → fix → report.**
+opencode config that actually ships. One command, no babysitting — concept to verified code with tests passing.
 
 > "This file is the complete algorithm. Everything else is just efficiency." — Karpathy
 
----
+Drop-in pack for [opencode.ai](https://opencode.ai). Two agents, two commands, one config file. 5 models from 5 different families, zero permission prompts. I built it because most agent setups stop after one file, ask "should I continue?" every 30 seconds, and leave tests red. This one finishes.
 
-### What is this? Who is it for? What problem does it solve?
+If you use opencode and you're tired of hand-holding your AI, this is for you.
 
-**opencode-autonomy** is a drop-in configuration pack for [opencode.ai](https://opencode.ai) that turns it into a fully autonomous coding agent.
+## Quick start
 
-- **What:** 2 agents, 2 commands, 1 config — 5 models across 5 families working together. Zero interruptions.
-- **Who:** Developers who use opencode and are tired of babysitting AI agents that stop after 1 file, ask permission for obvious fixes, or leave tests red.
-- **Problem:** Most agent setups are high-friction: they pause to ask "should I continue?", edit one file at a time, and skip verification. This config ships the whole way — with evidence.
-
-If you've said "just ship it" and the agent said "what do you mean?" — this is for you.
-
----
-
-### ⚡ Quick Start — under 60 seconds
+Under 60 seconds:
 
 ```bash
-# 1. Install opencode if you haven't (https://opencode.ai)
+# opencode itself
 curl -fsSL https://opencode.ai/install | bash
 
-# 2. Set two keys (you need OpenRouter, and a Meta API key for Spark — see docs)
+# keys — OpenRouter for 4 models, Meta file for Spark
 export OPENROUTER_API_KEY="sk-or-..."
 echo "your-meta-key" > ~/.config/opencode/meta-api-key
 
-# 3. Clone and install this config
+# install this config
 git clone https://github.com/vocino/opencode-autonomy.git
 cd opencode-autonomy
 ./install.sh --clean
 
-# 4. Verify
-opencode debug config   # must pass
-bash tests/validate.sh  # 5 models, 5 families, smoke test
+# should pass
+opencode debug config
+bash tests/validate.sh
 
-# 5. Ship something
+# then
 opencode
-# then inside opencode: /ship Implement a markdown preview with live reload
+# inside: /ship Implement markdown preview with live reload
 ```
 
-That's it. You're autonomous.
+## Install
 
----
-
-### 📦 Install
-
-**Recommended — clean sync (exact replica, removes stale files):**
+Clean sync is recommended — makes your `~/.config/opencode` exactly match this repo and deletes stale files:
 
 ```bash
 git clone https://github.com/vocino/opencode-autonomy.git
@@ -64,243 +48,181 @@ cd opencode-autonomy
 opencode debug config
 ```
 
-**Merge mode — keeps your customizations:**
+If you already customized opencode and want to keep your settings:
 
 ```bash
 ./install.sh
-# merges autonomy keys (agents, permissions, tool output limits)
-# preserves your model and provider settings
+# merges autonomy keys (agents, permissions, output limits)
+# preserves your model/provider choices
 ```
 
-**What gets installed:**
+What gets installed:
 
 ```
 ~/.config/opencode/
-├── opencode.json          ← merged (your model/provider preserved)
+├── opencode.json          # merged, your model/provider kept
 ├── agents/
-│   ├── build.md           ← primary, 300 steps, ships end-to-end
-│   └── fixer.md           ← subagent, closes lint/type/test loop
+│   ├── build.md           # primary, 300 steps, ships end-to-end
+│   └── fixer.md           # subagent that closes the loop on failures
 ├── commands/
-│   ├── ship.md            ← /ship — the closed loop
-│   └── fix.md             ← /fix — quick repair
+│   ├── ship.md            # /ship — the full loop
+│   └── fix.md             # /fix — quick repair
 └── scripts/
-    └── detect-oracle.sh   ← auto-detects lint/type/test/build
+    └── detect-oracle.sh   # finds your lint/type/test/build commands
 ```
 
-**Requirements:**
-- [opencode](https://opencode.ai) installed
-- `OPENROUTER_API_KEY` env var (for 4 specialist models)
-- `~/.config/opencode/meta-api-key` file (for Meta Spark primary)
-- `jq` (for config merge/validation)
+Requirements: `opencode`, `OPENROUTER_API_KEY`, `~/.config/opencode/meta-api-key`, `jq`. Backups go to `opencode.json.bak.<timestamp>` and `--clean` keeps the last 3.
 
-> Backup safety: install creates timestamped backups `opencode.json.bak.<ts>` and prunes to 3 in `--clean` mode.
+## Demo
 
----
-
-### 🎬 Demo — How it feels
+Real session looks like this:
 
 ```
 You: /ship Add dark mode toggle to settings, persist in localStorage
 
-build:  Concept → settings has no theme, needs toggle + persistence
-        Plan → 4 steps: 1) read settings 2) add toggle 3) persist 4) test
-        Implement → batched 3 files:
-          - src/components/Settings.tsx (toggle UI)
-          - src/hooks/useTheme.ts (localStorage logic)
-          - src/styles/theme.css (variables)
-        Verify → npm run lint ✓, tsc ✓, npm test 2 failed
-        Fix → @fixer: missing import + null check → rerun
-        Verify → lint ✓, tsc ✓, test ✓, build ✓
-        Ship →
+build: Concept — settings has no theme logic yet
+       Plan — 4 steps: read settings, add toggle, persist, test
+       Implement — 3 files batched:
+         src/components/Settings.tsx
+         src/hooks/useTheme.ts
+         src/styles/theme.css
+       Verify — lint ok, tsc ok, tests: 2 failed
+       Fix — @fixer fixes missing import + null check, reruns
+       Verify — lint ok, tsc ok, tests ok, build ok
 
-        What changed: 3 files, toggle + hook + css vars, why: requirement
-        Verified: lint ok, typecheck ok, 12 tests pass, build 89kB
-        Commit: feat(settings): add dark mode toggle with localStorage persistence
+       Changed: 3 files, toggle + hook + css vars
+       Verified: 12 tests pass, build 89kB
+       Commit: feat(settings): add dark mode toggle with localStorage
 ```
 
-No "should I continue?". No half-done PR. Just shipped.
+It doesn't ask you if it should continue. It just ships.
 
----
+## Features
 
-### ✨ Features — what makes this different
+Why this config is different:
 
-| Feature | This config | Typical setup |
-|---------|-------------|---------------|
-| **Autonomy** | `permission: allow all`, never asks | Asks for every edit |
-| **Batching** | 3-5 files at once, then verify | 1 file at a time |
-| **Verification loop** | lint → type → test → build → fix → rerun | Stops at first green file |
-| **Model diversity** | 5 models, 5 families, no dupes | 1 model, same blind spots |
-| **Fixer subagent** | Anthropic Sonnet repairs automatically | You fix agent's breakage |
-| **Long sessions** | 5000 lines output, tail 12, 1M context | Truncated logs, lost context |
-| **Install** | One script, verifiable, merge-safe | Copy-paste docs |
+| Thing | Here | Most configs |
+|-------|------|--------------|
+| Permissions | `allow all`, never asks | Prompts for every edit |
+| Edits | 3-5 files batched, then verified | One file at a time |
+| Verification | lint -> typecheck -> test -> build -> auto-fix loop | Stops after first edit |
+| Models | 5 models, 5 families, no duplicates | Single model, same blind spots |
+| Fixing | fixer subagent repairs failures itself | You clean up after it |
+| Context | 5000 lines, 200KB output, 1M context, tail 12 | Logs truncated |
 
-**5 models, 5 families — one strong default:**
+Model setup:
 
-- `meta/muse-spark-1.1` (Meta) → `build` primary, 300 steps, 1M context, reasoning — does 80%
-- `openrouter/google/gemini-flash-latest` (Google) → `small_model`, cheap title/summary
-- `openrouter/anthropic/claude-sonnet-4-5` (Anthropic) → `fixer`, strong repair
-- `openrouter/qwen/qwen3-coder` (Qwen) → `explore`, parallel code search specialist
-- `openrouter/openai/gpt-4o-mini` (OpenAI) → `plan`, cheap planning with different blind spot
+- `meta/muse-spark-1.1` — build primary, 300 steps, 1M context, does 80% of work
+- `openrouter/google/gemini-flash-latest` — small_model, titles and summaries
+- `openrouter/anthropic/claude-sonnet-4-5` — fixer, repairs broken builds
+- `openrouter/qwen/qwen3-coder` — explore, parallel code search
+- `openrouter/openai/gpt-4o-mini` — plan, cheap planning with different blind spots
 
-Two keys, five families. No duplicate models with different knobs.
+Two keys, five families. The point is diversity, not 15 agents you can't keep track of.
 
----
+## Why this exists
 
-### 💡 Why this exists
+I tried a bunch of high-autonomy configs. They were all either:
 
-I tried high-autonomy configs for opencode. Most were either:
+- too chatty — asking for permission to run `npm install`
+- too fragile — no verification, green on their file but red tests everywhere else
+- too single-model — one model doing everything, same mistakes over and over
+- too complex — 15 agents, 20 commands, nobody knows what actually runs
 
-1. **Too chatty** — asking permission for `npm install` or a missing import
-2. **Too fragile** — no verification, left tests red, no fix loop
-3. **Too single-model** — same blind spots, no cheap/expensive split
-4. **Too complex** — 15 agents, 20 commands, no one knows what runs
+The loop is actually simple: parse intent, plan if needed, batch edits, run checks, fix, report. Everything else is overhead.
 
-The Karpathy quote says it all: the algorithm is simple. Parse → plan → batch implement → verify → fix. Everything else is efficiency.
+This repo is 3 files you can read in 5 minutes: `README.md`, `opencode.json.example`, `commands/ship.md`. I built it on a CachyOS gaming + local-AI box that can't afford to break Steam or koboldcpp, so it's deliberately small and verifiable.
 
-This repo distills it to **3 files you can read in <5 minutes**: `README.md`, `opencode.json.example`, `commands/ship.md`. The rest is tooling.
+## Usage
 
-Built for a CachyOS gaming + local-AI desktop that must never break Steam/Proton or koboldcpp — so it's bloat-free, verifiable, and fast.
+**1. Ship a feature end-to-end**
 
----
+Inside opencode:
 
-### 🚀 Real Usage Examples
-
-**1. Ship a new feature — end-to-end**
-
-```bash
-# Inside opencode:
-/ship Implement user registration with email verification, form validation, and onboarding flow
-
-# Build will:
-# - Scan package.json, existing auth patterns, AGENTS.md
-# - TodoWrite 8 steps (ONE in_progress)
-# - Batch edit 4 files: components, hook, api route, test
-# - Run: npm run lint, tsc --noEmit, npm test, npm run build
-# - Fix failures via @fixer, rerun until green
-# - Report: what changed, what verified, commit message ready
+```
+/ship Implement user registration with email verification, form validation, onboarding flow
 ```
 
-**2. Quick fix with verification loop**
+Build will scan `package.json` and existing patterns, write a short todo list (one in progress at a time), batch edit components/hooks/routes/tests, run whatever your repo uses for lint/type/test/build (detected automatically), hand failures to fixer, loop until green, then give you a report with what changed and a commit message ready.
 
-```bash
+**2. Fix something quick**
+
+```
 /fix Settings crashes when email is empty — TypeError in validateEmail
-
-# Build will:
-# - @explore for validateEmail usages (parallel)
-# - Check git diff, recent changes
-# - Batch fix null check + test
-# - Verify loop: test red → fix → green
-# - Report final status
 ```
 
-**3. Parallel exploration + cheap planning**
+It searches for usages in parallel with `@explore`, checks git diff for context, patches the null check, runs tests, loops if needed.
 
-```bash
-# Use subagents explicitly for speed:
-@explore Find all API endpoints that touch user creation, include auth middleware
-
-# Tab cycles: build (meta/spark) ↔ plan (gpt-4o-mini)
-# plan proposes approach (read-only, asks before edits)
-# build executes with full autonomy
-```
-
----
-
-### ⚙️ How it works
+**3. Search and plan**
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  /ship "goal"                                           │
-│    │                                                    │
-│    ├─ Concept: Scan repo, package.json, git status      │
-│    │         → concrete outcome + constraints           │
-│    │                                                    │
-│    ├─ Plan: TodoWrite if 3+ steps (ONE in_progress)     │
-│    │                                                    │
-│    ├─ Implement: Batch 3-5 files, follow patterns       │
-│    │   ├─ @explore (qwen) parallel search               │
-│    │   └─ build (spark) ships                          │
-│    │                                                    │
-│    ├─ Verify: detect-oracle.sh → lint/type/test/build   │
-│    │   └─ capture exit code + evidence                 │
-│    │                                                    │
-│    ├─ Fix: Failures → @fixer (sonnet) loop until green  │
-│    │   └─ or 3x same error → report & stop              │
-│    │                                                    │
-│    └─ Ship: What changed, verified, human input, commit │
-└─────────────────────────────────────────────────────────┘
+@explore Find all API endpoints touching user creation and their auth middleware
 ```
 
-**Core tuning in `opencode.json.example`:**
+Tab cycles `build` (Spark) and `plan` (gpt-4o-mini). Plan is read-only and asks before editing — good for checking approach before you burn steps. Build has full autonomy.
 
-- `subagent_depth: 3` — allows `build → explore → fixer` chains
-- `formatter + lsp: true` — auto-fix formatting, type diagnostics
-- `permission: allow all` — zero interruptions (plan agent is ask-mode for safety)
-- `tool_output: 5000 lines / 200KB` — full logs for fix loop
-- `compaction.tail_turns: 12` — long session survival (300 steps need it)
-- `batch_tool: true` — parallel discovery + edits
+## How it works
 
-Docs: https://opencode.ai/docs
+```
+/ship "goal"
+  -> Concept: read repo, package.json, git status -> concrete outcome
+  -> Plan: TodoWrite if 3+ steps, one active at a time
+  -> Implement: batch 3-5 files, @explore in parallel for search
+  -> Verify: detect-oracle.sh -> lint/type/test/build, capture evidence
+  -> Fix: failures -> @fixer, rerun until green or 3x same error
+  -> Ship: report changes, verification, commit message
+```
 
----
+Key bits in `opencode.json.example`:
 
-### 🗺️ Roadmap
+- `subagent_depth: 3` lets `build -> explore -> fixer` chains happen
+- `formatter + lsp: true` auto-fixes formatting and surface types
+- `permission: allow all` for build, ask-mode for plan
+- `tool_output: 5000 lines / 200KB` so fix loops have full logs
+- `compaction.tail_turns: 12` keeps long sessions alive
+- `batch_tool: true` for parallel reads/edits
 
-- [x] 5-model strategy, 5 families, no duplication
-- [x] Bloat-free installer with `--clean` and backup pruning
-- [x] CI validation + `detect-oracle.sh`
-- [ ] Example repos showing `/ship` in the wild (Next.js, Python FastAPI)
-- [ ] `opencode-autonomy` as installable plugin via `opencode registry`
-- [ ] Recording of real session (demo GIF / asciinema)
-- [ ] Benchmark: time-to-green for common tasks vs vanilla opencode
-- [ ] Optional presets: `minimal` (2 models), `max` (add Grok, DeepSeek)
+Opencode docs: https://opencode.ai/docs
 
-Have ideas? Open an issue or discussion.
+## Roadmap
 
----
+- [x] 5 models, 5 families, zero duplication
+- [x] bloat-free installer with --clean and backup pruning
+- [x] CI that actually validates config
+- [ ] example walkthroughs for Next.js and FastAPI repos
+- [ ] publish as installable plugin via opencode registry
+- [ ] real session recording (asciinema)
+- [ ] benchmark: time-to-green vs vanilla opencode
+- [ ] presets: minimal (2 models), max (add Grok/DeepSeek)
 
-### 🤝 Contributing
+If you have an idea, open an issue. I read them.
 
-Contributions welcome — this is meant to be the obvious way to ship.
+## Contributing
 
-**Quick start for contributors:**
+PRs welcome. Goal is to keep it the obvious way to ship, not to add more stuff.
 
 ```bash
 git clone https://github.com/vocino/opencode-autonomy.git
 cd opencode-autonomy
-bash tests/validate.sh   # must pass before PR
+bash tests/validate.sh   # must pass
 ```
 
-**What we look for:**
+I care about:
 
-- Keeps it simple: 2 agents, 2 commands is intentional. Prove need before adding.
-- 5 models, 5 families, 0 duplicates — preserve diversity.
-- Verifiable: `opencode debug config` must pass, install smoke test must pass.
-- Bloat-free: no extra deps, no opaque scripts.
+- simplicity — 2 agents, 2 commands is intentional, don't add a third unless you can justify it
+- 5 models, 5 families, 0 duplicates
+- verifiable — `opencode debug config` and the smoke install test must pass
+- no bloat — no extra deps, no mystery scripts
 
-**PR checklist:**
+Before you open a PR:
 
-- [ ] `bash tests/validate.sh` passes
-- [ ] `jq empty opencode.json.example` passes
-- [ ] `shellcheck` on changed `.sh` files
-- [ ] Updated README if user-facing behavior changed
-- [ ] No secrets committed (`*.key`, `auth.json` are gitignored)
+- `bash tests/validate.sh` passes
+- `jq empty opencode.json.example` passes
+- `shellcheck` on any changed shell scripts
+- no keys or secrets — `*.key`, `auth.json` are gitignored
 
-**Good first issues:**
+Ideas that would help: better oracle detection for Rust/Go/Python, clearer errors in install.sh, example repos showing /ship working.
 
-- Add language-specific oracle detection (Rust, Go, Python already partial)
-- Improve error messages in `install.sh`
-- Write example walkthroughs for popular stacks
+## License
 
----
-
-### 📄 License
-
-MIT — see [LICENSE](LICENSE). Free for any use, attribution appreciated.
-
----
-
-<p align="center">
-Built for shipping. Not for chatting.<br>
-<strong>/ship it</strong>
-</p>
+MIT — see LICENSE.

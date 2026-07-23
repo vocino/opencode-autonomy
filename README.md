@@ -8,7 +8,7 @@ opencode config that actually ships. One command, no babysitting — concept to 
 
 > "This file is the complete algorithm. Everything else is just efficiency." — Karpathy
 
-Drop-in autonomy suite for [opencode.ai](https://opencode.ai). Two agents, two commands, one config, 5 models from 5 families, zero permission prompts. Installs via `npx` in seconds, updates with `npx @latest`, or as a proper opencode plugin.
+Drop-in autonomy suite for [opencode.ai](https://opencode.ai). Two agents, two commands, one config, 5 models from 5 families, zero permission prompts. Installs via `opencode plugin` in seconds, optional `npx` asset sync, updates with one command.
 
 If you use opencode and you're tired of hand-holding your AI, this is for you.
 
@@ -38,9 +38,9 @@ subagent_depth=3, formatter + lsp + snapshot enabled
 
 By installing you acknowledge you want allow-all autonomy. If that's not you, use `plan` primary or don't install.
 
-## Quick start — npx (recommended)
+## Quick start — plugin first (recommended)
 
-Under 60 seconds, no git clone:
+About a minute, no git clone:
 
 ```bash
 # opencode itself
@@ -50,12 +50,14 @@ curl -fsSL https://opencode.ai/install | bash
 export OPENROUTER_API_KEY="sk-or-..."
 echo "your-meta-key" > ~/.config/opencode/meta-api-key
 
-# install autonomy suite (copies agents/commands, merges autonomy keys)
+# install runtime plugin (global: all repos on this machine)
+opencode plugin opencode-autonomy --global
+
+# optional but nice: copy markdown agents/commands/scripts locally so you can edit them
 npx opencode-autonomy@latest --clean
 
 # validate
 opencode debug config
-npx opencode-autonomy --help
 
 # then
 opencode
@@ -65,13 +67,19 @@ opencode
 Update anytime:
 
 ```bash
+# runtime plugin update (recommended)
+opencode plugin opencode-autonomy@latest --global -f
+
+# optional: refresh local markdown/script assets
 npx opencode-autonomy@latest --clean
-# or if you installed globally:
-npm i -g opencode-autonomy
-opencode-autonomy --clean
 ```
 
-What gets installed:
+Global vs project scope:
+
+- Use `--global` if you want this behavior everywhere on your machine.
+- Omit `--global` inside a repo if you want autonomy only for that project.
+
+What `npx opencode-autonomy` installs locally:
 
 ```
 ~/.config/opencode/
@@ -86,43 +94,53 @@ What gets installed:
     └── detect-oracle.sh   # finds your lint/type/test/build commands
 ```
 
-## Alternate: As opencode plugin (runtime enforcement)
+## Install modes (best practice)
 
-Modern opencode supports npm plugins auto-installed at startup. This gives you **runtime guarantees** that autonomy settings are active even without file copies.
+If you only run one command, run the global plugin install:
 
-Add to your `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-autonomy"]
-}
+```bash
+opencode plugin opencode-autonomy --global
 ```
 
-Then restart opencode. It will:
+That keeps autonomy defaults enforced at runtime every session.
+
+**Optional add-ons**
+
+**1) Local markdown assets (recommended for editable prompts)**
+
+```bash
+npx opencode-autonomy@latest --clean
+```
+
+This copies `agents/*.md`, `commands/*.md`, and `scripts/*.sh` into `~/.config/opencode` so prompts are local, readable, and editable.
+
+**2) Version pinning (for reproducible setups)**
+
+```bash
+opencode plugin opencode-autonomy@0.2.3 --global -f
+```
+
+Use this when you want the exact same behavior across machines or teams.
+
+**3) Project-scoped install (repo-only behavior)**
+
+```bash
+opencode plugin opencode-autonomy
+```
+
+Omit `--global` to install in the current project's opencode config instead of your user-wide config.
+
+At startup, opencode will:
 
 - `bun install` this package into `~/.cache/opencode/node_modules/`
 - Run its `config` hook which **forces** `permission allow-all`, `tool_output` big, `batch_tool`, `subagent_depth=3`, etc.
 - Injects `build/fixer/explore/plan` agents and `ship/fix` commands as JSON fallbacks if markdown not present.
 
-Best DX is **both**:
+Best experience is still **both**:
 
-- `npx opencode-autonomy` for files (agents markdown you can read/edit)
-- `plugin: ["opencode-autonomy"]` for live enforcement
-- Update: `npx opencode-autonomy@latest --clean` + restart opencode (cache will re-resolve)
-
-To use a specific version:
-
-```json
-{ "plugin": ["opencode-autonomy@0.2.0"] }
-```
-
-Or latest:
-
-```bash
-rm -rf ~/.cache/opencode/packages/opencode-autonomy@latest
-# restart opencode
-```
+- `opencode plugin opencode-autonomy --global` for live enforcement
+- `npx opencode-autonomy@latest --clean` for local markdown assets
+- Updates: `opencode plugin opencode-autonomy@latest --global -f` (+ optional `npx ... --clean`)
 
 ## Legacy: git clone
 
@@ -171,8 +189,8 @@ It doesn't ask you if it should continue. It just ships.
 | Models | 5 models, 5 families, no duplicates | Single model, same blind spots |
 | Fixing | fixer subagent repairs failures itself | You clean up after it |
 | Context | 5000 lines, 200KB output, 1M context, tail 12 | Logs truncated |
-| Install | `npx opencode-autonomy` | git clone + manual |
-| Updates | `npx @latest --clean` or plugin cache clear | git pull |
+| Install | `opencode plugin opencode-autonomy` (+ optional `npx` for local files) | git clone + manual |
+| Updates | `opencode plugin opencode-autonomy@latest --global -f` (+ optional `npx ... --clean`) | git pull |
 
 Model setup:
 
@@ -335,13 +353,14 @@ npm run build
 npm publish --access public
 ```
 
-Users then get updates via:
+Users then update via:
 
 ```bash
+# runtime plugin update
+opencode plugin opencode-autonomy@latest --global -f
+
+# optional: refresh local markdown/script assets
 npx opencode-autonomy@latest --clean
-# if using plugin array, clear cache:
-rm -rf ~/.cache/opencode/packages/opencode-autonomy@latest
-# restart opencode
 ```
 
 ## Contributing

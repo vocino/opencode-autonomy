@@ -72,15 +72,31 @@ export const AutonomyPlugin: Plugin = async () => {
       if (!cfg.small_model) cfg.small_model = AUTONOMY_MODELS.small_model;
 
       // --- providers — merge, preserve user providers, add ours if missing ---
+      // Regression guard for #6: user apiKey must never be overwritten by defaults.
+      // deepMerge is user-wins, but we add explicit post-merge check for auth keys.
       cfg.provider ??= {};
       for (const [pId, pDef] of Object.entries(AUTONOMY_PROVIDERS)) {
-        if (!cfg.provider[pId]) {
+        const userProv = cfg.provider[pId] as any;
+        if (!userProv) {
           cfg.provider[pId] = deepClone(pDef as any);
         } else {
+          const userOpts = userProv?.options as any;
+          const hadUserApiKey = userOpts?.apiKey !== undefined;
+          const hadUserBaseURL = userOpts?.baseURL !== undefined;
+          const userApiKeyPrev = hadUserApiKey ? deepClone(userOpts.apiKey) : undefined;
+          const userBasePrev = hadUserBaseURL ? deepClone(userOpts.baseURL) : undefined;
           // User values win; defaults fill missing gaps. Deep clone to avoid mutating AUTONOMY_PROVIDERS.
-          const merged = deepMerge(deepClone(pDef as any), cfg.provider[pId]);
+          const merged = deepMerge(deepClone(pDef as any), userProv);
+          // Defensive: restore user auth if deepMerge somehow lost it (future regression)
+          if (hadUserApiKey) {
+            merged.options ??= {};
+            merged.options.apiKey = userApiKeyPrev;
+          }
+          if (hadUserBaseURL) {
+            merged.options ??= {};
+            merged.options.baseURL = userBasePrev;
+          }
           // Ensure user's model overwrites win per model id, while preserving nested defaults
-          // deepMerge already gives user-wins, but keep explicit model merging for clarity
           if ((pDef as any).models) {
             merged.models = {
               ...deepClone((pDef as any).models),

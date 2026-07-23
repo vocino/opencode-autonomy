@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.5](https://github.com/vocino/opencode-autonomy/compare/v0.2.4...v0.2.5) (2026-07-23)
+
+
+### Bug Fixes
+
+* **attribution:** avoid Co-authored-by literal to pass master guard ([ea7d6a1](https://github.com/vocino/opencode-autonomy/commit/ea7d6a121c334979e45efef231e7c801475c1dbf))
+* **plugin:** preserve user provider apiKey/baseURL with explicit guard, add regression test for [#6](https://github.com/vocino/opencode-autonomy/issues/6) ([3c5e5b7](https://github.com/vocino/opencode-autonomy/commit/3c5e5b751bf8ecd014f839c84bbd5f4c8f7c7a07))
+* **plugin:** preserve user provider apiKey/baseURL with explicit guard, closes [#6](https://github.com/vocino/opencode-autonomy/issues/6) ([c8101d3](https://github.com/vocino/opencode-autonomy/commit/c8101d334c851f5b65e99d954747fc1bc35215c2))
+
 ## [0.2.4](https://github.com/vocino/opencode-autonomy/compare/v0.2.3...v0.2.4) (2026-07-23)
 
 

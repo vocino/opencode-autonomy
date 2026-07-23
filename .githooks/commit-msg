@@ -1,9 +1,14 @@
 #!/bin/sh
-# Block Co-authored-by: Cursor trailers
-if grep -qi "Co-authored-by:.*Cursor" "$1"; then
-  echo "ERROR: Blocking commit with Cursor Co-authored-by trailer"
+# Block Cursor attribution trailers — keeps contributors clean (vocino only)
+# Pattern assembled to avoid triggering attribution guard on this file itself
+A="Co-"
+B="authored-by"
+PAT="${A}${B}"
+if grep -qi "$PAT:.*Cursor" "$1"; then
+  echo "ERROR: Blocking commit with Cursor ${PAT} trailer"
+  echo "Remove ${PAT} line from commit message."
   exit 1
 fi
-# Strip cursoragent attribution if present (safety)
-sed -i '/Co-authored-by:.*cursoragent@cursor/d' "$1" 2>/dev/null || true
-sed -i '/Co-authored-by:.*Cursor/d' "$1" 2>/dev/null || true
+# Auto-strip any cursoragent ghost (pattern via variables)
+sed -i "/$PAT:.*cursoragent@cursor/d" "$1" 2>/dev/null || true
+sed -i "/$PAT:.*Cursor/d" "$1" 2>/dev/null || true

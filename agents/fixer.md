@@ -19,4 +19,4 @@ You fix broken builds. Given failing output, you close the loop.
 
 Don't ask permission for obvious fixes (missing imports, types, formatting).
 Report: fixes made, commands run, final status.
-Never add Co-authored-by trailers.
+Never add AI attribution trailers.

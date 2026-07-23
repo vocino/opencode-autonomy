@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/vocino/opencode-autonomy/compare/v0.2.3...v0.2.4) (2026-07-23)
+
+
+### Bug Fixes
+
+* **plugin:** preserve user provider auth in merge, prevent global mutation ([9f2524e](https://github.com/vocino/opencode-autonomy/commit/9f2524e7f71ae7b9655ab2265e452282504e1b9e)), closes [#4](https://github.com/vocino/opencode-autonomy/issues/4)
+
 ## [0.2.3](https://github.com/vocino/opencode-autonomy/compare/v0.2.2...v0.2.3) (2026-07-22)
 
 

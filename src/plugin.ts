@@ -13,13 +13,26 @@
 import type { Plugin, Config } from "@opencode-ai/plugin";
 import { AUTONOMY_CONFIG, AUTONOMY_AGENTS, AUTONOMY_PROVIDERS, AUTONOMY_MODELS } from "./autonomy.js";
 
-// Deep merge tiny helper — we don't want deps
+// Deep clone + deep merge helpers — no deps, safe for provider merging
+function deepClone<T>(obj: T): T {
+  // structuredClone is available in modern Node/Bun, fallback to JSON
+  try {
+    if (typeof structuredClone === "function") return (structuredClone as any)(obj);
+  } catch {
+    // ignore
+  }
+  return JSON.parse(JSON.stringify(obj));
+}
+
+// Merge source into target, source wins for scalars, deep-merge for objects.
+// Does NOT mutate source; mutates target (which should be a clone of defaults).
 function deepMerge(target: any, source: Record<string, any>): any {
   for (const [k, v] of Object.entries(source)) {
     if (v && typeof v === "object" && !Array.isArray(v)) {
-      if (!target[k] || typeof target[k] !== "object") target[k] = {} as any;
+      if (!target[k] || typeof target[k] !== "object" || Array.isArray(target[k])) target[k] = {} as any;
       deepMerge(target[k], v);
-    } else if (target[k] === undefined) {
+    } else {
+      // scalar, array, null, etc — user wins
       target[k] = v;
     }
   }
@@ -62,17 +75,19 @@ export const AutonomyPlugin: Plugin = async () => {
       cfg.provider ??= {};
       for (const [pId, pDef] of Object.entries(AUTONOMY_PROVIDERS)) {
         if (!cfg.provider[pId]) {
-          cfg.provider[pId] = pDef as any;
+          cfg.provider[pId] = deepClone(pDef as any);
         } else {
-          // ensure required subfields exist without overwriting user's api keys
-          cfg.provider[pId] = deepMerge({ ...pDef } as any, cfg.provider[pId]);
-          // But preserve user's model overwrites for meta etc
+          // User values win; defaults fill missing gaps. Deep clone to avoid mutating AUTONOMY_PROVIDERS.
+          const merged = deepMerge(deepClone(pDef as any), cfg.provider[pId]);
+          // Ensure user's model overwrites win per model id, while preserving nested defaults
+          // deepMerge already gives user-wins, but keep explicit model merging for clarity
           if ((pDef as any).models) {
-            cfg.provider[pId].models = {
-              ...(pDef as any).models,
-              ...(cfg.provider[pId].models ?? {}),
+            merged.models = {
+              ...deepClone((pDef as any).models),
+              ...(merged.models ?? {}),
             };
           }
+          cfg.provider[pId] = merged;
         }
       }
 
@@ -80,7 +95,7 @@ export const AutonomyPlugin: Plugin = async () => {
       cfg.agent ??= {};
       for (const [aId, aDef] of Object.entries(AUTONOMY_AGENTS)) {
         if (!cfg.agent[aId]) {
-          cfg.agent[aId] = aDef as any;
+          cfg.agent[aId] = deepClone(aDef as any);
         } else {
           // merge: keep user's model if set, fill missing mode/steps/temperature/description
           const existing = cfg.agent[aId];

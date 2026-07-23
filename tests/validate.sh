@@ -166,4 +166,62 @@ grep -q "npx opencode-autonomy" README.md || fail "README should mention npx"
 grep -q "plugin.*opencode-autonomy" README.md || fail "README should mention plugin array"
 pass "README contains autonomy warning + npx DX"
 
+
+# Regression test for issue #6 — provider apiKey override bug
+# Plugin must preserve user apiKey (env and file variants), not overwrite with placeholder
+if command -v node >/dev/null && [[ -f dist/plugin.js ]]; then
+  node --input-type=module <<'NODE' || fail "provider apiKey regression test failed"
+import plugin from './dist/plugin.js';
+import { AUTONOMY_PROVIDERS } from './dist/autonomy.js';
+
+function assert(cond, msg){ if(!cond) throw new Error(msg); }
+
+// Check AUTONOMY_PROVIDERS has full valid placeholders, not truncated
+const metaKey = AUTONOMY_PROVIDERS.meta.options.apiKey;
+const orKey = AUTONOMY_PROVIDERS.openrouter.options.apiKey;
+assert(metaKey.startsWith("{file:"), "meta placeholder should start with {file: - got "+metaKey);
+assert(metaKey.includes("meta-api-key"), "meta placeholder should include full path meta-api-key - got "+metaKey);
+assert(orKey === "{env:OPENROUTER_API_KEY}", "openrouter placeholder should be full {env:OPENROUTER_API_KEY} - got "+orKey);
+console.log("placeholders full and valid");
+
+// Use distinct env/file keys for user — these are test placeholders, not secrets
+const USER_META_ENV = "{env:CUSTOM_MODEL_KEY}";
+const USER_OR_FILE = "{file:~/.config/opencode/test-key}";
+
+const inst = await plugin();
+const userCfg = {
+  provider: {
+    meta: {
+      options: {
+        apiKey: USER_META_ENV,
+        baseURL: "https://custom.meta.ai/v1"
+      },
+      models: { "custom-model": { name: "custom" } }
+    },
+    openrouter: {
+      options: { apiKey: USER_OR_FILE }
+    }
+  }
+};
+await inst.config(userCfg);
+// User apiKeys must be preserved
+assert(userCfg.provider.meta.options.apiKey === USER_META_ENV, "user meta env apiKey should be preserved, got "+userCfg.provider.meta.options.apiKey);
+assert(userCfg.provider.meta.options.baseURL === "https://custom.meta.ai/v1", "user meta baseURL should be preserved");
+assert(userCfg.provider.openrouter.options.apiKey === USER_OR_FILE, "user openrouter file apiKey preserved, got "+userCfg.provider.openrouter.options.apiKey);
+console.log("user apiKey preservation ok");
+
+// Empty user provider should get defaults with valid placeholders
+const emptyCfg = { provider: {} };
+await inst.config(emptyCfg);
+assert(emptyCfg.provider.meta.options.apiKey.startsWith("{file:"), "default meta placeholder valid");
+assert(emptyCfg.provider.meta.options.apiKey.includes("meta-api-key"), "default meta placeholder full path");
+assert(emptyCfg.provider.openrouter.options.apiKey === "{env:OPENROUTER_API_KEY}", "default openrouter placeholder full");
+console.log("default placeholders preserved when user has no provider");
+
+console.log("provider apiKey regression test ok (issue #6)");
+NODE
+  pass "provider apiKey regression test ok (issue #6): placeholders full + user-wins merge"
+fi
+
+
 pass "all checks passed"

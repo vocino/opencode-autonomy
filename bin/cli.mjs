@@ -68,18 +68,25 @@ function parseArgs() {
     version: false,
     dest: DEST_BASE,
   };
-  for (const a of raw) {
+  for (let i = 0; i < raw.length; i++) {
+    const a = raw[i];
     if (a === "--clean") flags.clean = true;
     else if (a === "--dry-run" || a === "-n") flags.dryRun = true;
     else if (a === "--help" || a === "-h") flags.help = true;
     else if (a === "--version" || a === "-V") flags.version = true;
     else if (a === "--disable") flags.disable = true;
-    else if (a.startsWith("--dest=")) flags.dest = a.slice(7);
-    else if (a === "--dest" ) { /* next arg */ }
+    else if (a.startsWith("--dest=")) {
+      const v = a.slice(7).trim();
+      if (v) flags.dest = v;
+    }
+    else if (a === "--dest") {
+      const next = raw[i + 1];
+      if (next && !next.startsWith("--")) {
+        flags.dest = next;
+        i++;
+      }
+    }
   }
-  // handle --dest <path>
-  const destIdx = raw.indexOf("--dest");
-  if (destIdx !== -1 && raw[destIdx+1]) flags.dest = raw[destIdx+1];
   return flags;
 }
 
@@ -93,12 +100,17 @@ Usage:
   npx opencode-autonomy@latest --clean # update to latest + clean
 
 Options:
-  --clean       Delete stale *.md/*.sh in dest not in source, prune backups to 3
-  --dry-run     Show what would happen without writing
-  --disable     Restore backup if exists (undo autonomy)
-  --dest <dir>  Override destination (default: ~/.config/opencode or $XDG_CONFIG_HOME/opencode)
-  --help        This help
-  --version     Show version
+  --clean           Delete stale *.md/*.sh in dest not in source, prune backups to 3
+  --dry-run, -n     Show what would happen without writing
+  --disable         Restore backup if exists (undo autonomy)
+  --dest <dir>      Override destination (default: ~/.config/opencode or $XDG_CONFIG_HOME/opencode)
+                    Supports both --dest=/path and --dest /path
+  --help, -h        This help
+  --version, -V     Show version
+
+Recommended (plugin-first, runtime enforced):
+  1. Add "opencode-autonomy" to opencode.json "plugin": [...]  # runtime: permission allow-all, batch_tool, etc
+  2. Then run: npx opencode-autonomy --clean                     # files: copies agents/*.md, commands/*.md, scripts/*.sh
 
 What it does:
   1. Creates ~/.config/opencode/{agents,commands,scripts}
@@ -107,10 +119,15 @@ What it does:
   3. Copies agents/build.md, fixer.md, commands/ship.md, fix.md, scripts/detect-oracle.sh
   4. Validates with 'opencode debug config' if opencode installed
 
+Plugin vs npx — both recommended, order matters for first install:
+  - plugin array = runtime enforcement (permission allow-all, tool_output 5k, etc) — no file copy
+  - npx install = markdown files local/editable + json merge — no runtime guarantee unless plugin added
+  For full autonomy: do BOTH — plugin array first, then npx.
+
 Notes:
 ${AUTONOMY_NOTICE}
   Docs: https://github.com/vocino/opencode-autonomy
-  Plugin: Add "opencode-autonomy" to opencode.json "plugin": [...] for runtime enforcement.
+  Example: opencode.json.example shows exact shape with provider placeholders: {file:~/.config/opencode/meta-api-key} and {env:OPENROUTER_API_KEY}
 `);
 }
 

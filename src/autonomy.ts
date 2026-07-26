@@ -1,6 +1,25 @@
 /**
  * Single source of truth for autonomy opinionated config.
  * Both the npx installer and the opencode plugin import from here.
+ *
+ * IMPORTANT – Provider placeholder completeness (issue #6 regression guard)
+ * -------------------------------------------------------------------------
+ * AUTONOMY_PROVIDERS must contain FULL VALID placeholder tokens, e.g.
+ *   meta:       apiKey: "{file:~/.config/opencode/meta-api-key}"
+ *   openrouter: apiKey: "{env:OPENROUTER_API_KEY}"
+ * Truncated forms like "{file...y}" or "{env:...EY}" are invalid and were the
+ * root cause of #6. They break `opencode debug config` validation and hide
+ * user-provided keys when deepMerge falls back to defaults.
+ *
+ * - The placeholder strings below are NOT secrets — they are token references
+ *   that opencode resolves at runtime (file path or env var name).
+ * - Never shorten or mask them; they must be parseable by opencode.
+ * - tests/validate.sh asserts this: meta starts with "{file:" and contains
+ *   "meta-api-key", openrouter equals "{env:OPENROUTER_API_KEY}".
+ *
+ * User preservation: plugin.ts deepClone + deepMerge user-wins, with explicit
+ * post-merge restoration of apiKey/baseURL. This file must stay compatible
+ * with that guard.
  */
 
 export const AUTONOMY_CONFIG = {
@@ -14,6 +33,12 @@ export const AUTONOMY_CONFIG = {
   permission: { "*": "allow", external_directory: "allow", doom_loop: "allow" },
 } as const;
 
+/**
+ * Opinionated agent definitions — must stay in sync with:
+ * - agents/*.md frontmatter (description, mode, steps, temperature)
+ * - opencode.json.example agent section
+ * - fallbackBuild/fallbackFixer in src/templates.ts
+ */
 export const AUTONOMY_AGENTS = {
   build: {
     mode: "primary" as const,
@@ -54,23 +79,29 @@ export const AUTONOMY_AGENTS = {
   },
 };
 
+/**
+ * Provider defaults — placeholders must be full valid tokens (see header comment).
+ * Model limits documented inline; used by opencode for context budgeting.
+ */
 export const AUTONOMY_PROVIDERS = {
   meta: {
     npm: "@ai-sdk/openai",
     name: "Meta",
     options: {
       baseURL: "https://api.meta.ai/v1",
+      /** Full valid placeholder — must stay "{file:~/.config/opencode/meta-api-key}" — issue #6 guard */
       apiKey: "{file:~/.config/opencode/meta-api-key}",
     },
     models: {
       "muse-spark-1.1": {
         name: "Muse Spark 1.1",
         reasoning: true,
-        limit: { context: 1_048_576, output: 131_072 },
+        limit: { context: 1_048_576, output: 131_072 }, // 1M in, 128k out
       },
     },
   },
   openrouter: {
+    /** Full valid placeholder — must stay "{env:OPENROUTER_API_KEY}" — issue #6 guard */
     options: { apiKey: "{env:OPENROUTER_API_KEY}" },
   },
 };

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/vocino/opencode-autonomy/compare/v0.2.5...v0.3.0) (2026-08-03)
+
+
+### Features
+
+* **plan:** council of 3 — meta orchestrator + 2 cursor specialists for robust creative planning ([c757ec7](https://github.com/vocino/opencode-autonomy/commit/c757ec7fca5819ff880778660d5139ec067c6f3f))
+
 ## [0.2.5](https://github.com/vocino/opencode-autonomy/compare/v0.2.4...v0.2.5) (2026-08-03)
 
 

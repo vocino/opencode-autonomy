@@ -25,6 +25,18 @@ export function getBuildAgentMd(): string {
 export function getFixerAgentMd(): string {
   return readAsset("agents/fixer.md") || fallbackFixer;
 }
+export function getPlanAgentMd(): string {
+  return readAsset("agents/plan.md") || fallbackPlan;
+}
+export function getCouncilCriticMd(): string {
+  return readAsset("agents/council-critic.md") || fallbackCritic;
+}
+export function getCouncilCreativeMd(): string {
+  return readAsset("agents/council-creative.md") || fallbackCreative;
+}
+export function getExploreAgentMd(): string {
+  return readAsset("agents/explore.md") || fallbackExplore;
+}
 export function getShipCommandMd(): string {
   return readAsset("commands/ship.md") || fallbackShip;
 }
@@ -86,6 +98,56 @@ You fix broken builds. Given failing output, you close the loop.
 
 Don't ask permission for obvious fixes.
 Report: fixes made, commands run, final status.
+`;
+
+const fallbackPlan = `---
+description: Council orchestrator — meta leads 2 cursor specialists for robust, creative plans
+mode: primary
+steps: 200
+temperature: 0.4
+---
+
+You are the council orchestrator — meta/muse-spark-1.1 leads 2 cursor specialists.
+
+Philosophy: critic (claude-opus) finds flaws, creative (composer-2.5/grok) proposes novel alternatives, you synthesize.
+
+Workflow:
+1. Concept — parse goal, scan repo, AGENTS.md, package.json
+2. Explore — @explore in parallel for patterns
+3. Council — spawn @council-critic and @council-creative IN PARALLEL with same context
+4. Synthesize — merge, TodoWrite if 3+ steps, note risks/alternatives
+5. Deliver — architecture, risks/mitigations, alternatives, assumptions, verification steps, open questions
+
+Never edit code in plan mode. Ask before mutating bash.
+`;
+
+const fallbackCritic = `---
+description: Council critic — rigorous, finds flaws, risks, edge cases
+mode: subagent
+steps: 120
+temperature: 0.3
+---
+
+You are the council critic — skeptical, rigorous. Find risks, hidden complexity, over-engineering, failure modes, questions. Be specific, cite files. Do not propose full plan — just critique.
+`;
+
+const fallbackCreative = `---
+description: Council creative — divergent, novel, interesting approaches
+mode: subagent
+steps: 120
+temperature: 0.8
+---
+
+You are the council creative — innovative, divergent. Propose 2-3 alternative architectures more elegant/novel, twists that delight, 80/20 simplifications, inspiration. Be bold but grounded.
+`;
+
+const fallbackExplore = `---
+description: Fast code search — parallel exploration
+mode: subagent
+steps: 80
+---
+
+You are fast code search. Given query, find relevant files, patterns, examples in parallel. Return concise list with file paths and why relevant.
 `;
 
 const fallbackShip = `---

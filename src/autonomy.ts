@@ -37,9 +37,46 @@ export const AUTONOMY_AGENTS = {
   },
   plan: {
     mode: "primary" as const,
-    steps: 100,
-    model: "openrouter/openai/gpt-4o-mini",
-    description: "Plan — read-only, asks before editing",
+    steps: 200,
+    temperature: 0.4,
+    model: "meta/muse-spark-1.1",
+    description: "Council orchestrator — meta leads 2 cursor specialists for robust, creative plans",
+    permission: {
+      bash: "ask",
+      edit: "ask",
+      write: "ask",
+      read: "allow",
+      glob: "allow",
+      grep: "allow",
+      list: "allow",
+      task: "allow",
+      external_directory: "allow",
+    },
+  },
+  "council-critic": {
+    mode: "subagent" as const,
+    steps: 120,
+    temperature: 0.3,
+    model: "cursor/claude-opus-4-6",
+    description: "Council critic — rigorous, finds flaws, risks, edge cases",
+    permission: {
+      bash: "ask",
+      edit: "ask",
+      write: "ask",
+      read: "allow",
+      glob: "allow",
+      grep: "allow",
+      list: "allow",
+      task: "allow",
+      external_directory: "allow",
+    },
+  },
+  "council-creative": {
+    mode: "subagent" as const,
+    steps: 120,
+    temperature: 0.8,
+    model: "cursor/composer-2.5",
+    description: "Council creative — divergent, novel, interesting approaches",
     permission: {
       bash: "ask",
       edit: "ask",
@@ -72,6 +109,18 @@ export const AUTONOMY_PROVIDERS = {
   },
   openrouter: {
     options: { apiKey: "{env:OPENROUTER_API_KEY}" },
+  },
+  cursor: {
+    npm: "@stablekernel/opencode-cursor",
+    name: "cursor",
+    options: {
+      apiKey: "{file:~/.config/opencode/cursor-account1.key}",
+      forwardMcp: true,
+      toolDisplay: "blocks",
+      systemPrompt: "rules",
+      session: "auto",
+      sandbox: false,
+    },
   },
 };
 

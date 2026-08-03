@@ -19,35 +19,46 @@ pass "json valid"
 jq -e '.model=="meta/muse-spark-1.1"' opencode.json.example >/dev/null || fail "model should be meta/muse-spark-1.1"
 jq -e '.small_model=="openrouter/google/gemini-flash-latest"' opencode.json.example >/dev/null || fail "small_model should be google flash"
 
-# AC-2: providers include meta + openrouter, no secrets
+# AC-2: providers include meta + openrouter + cursor (council), no secrets
 jq -e '.provider.meta' opencode.json.example >/dev/null || fail "meta provider missing"
 jq -e '.provider.openrouter' opencode.json.example >/dev/null || fail "openrouter provider missing"
+jq -e '.provider.cursor' opencode.json.example >/dev/null || fail "cursor provider missing (council)"
 jq -e '.provider.meta.options.apiKey|startswith("{file:")' opencode.json.example >/dev/null || fail "meta apiKey should be {file:}"
 jq -e '.provider.openrouter.options.apiKey=="{env:OPENROUTER_API_KEY}"' opencode.json.example >/dev/null || fail "openrouter apiKey should be env"
+jq -e '.provider.cursor.options.apiKey|startswith("{file:")' opencode.json.example >/dev/null || fail "cursor apiKey should be {file:}"
 
-# AC-3: 5 distinct models, varied families, no dup
+# AC-3: 6 distinct models (council adds 2 cursor specialists), varied families, allow meta dup for orchestrator
 distinct=$(jq -r '[.model, .small_model] + [.agent[]?.model // empty] | unique | .[]' opencode.json.example | sort -u)
 count=$(echo "$distinct" | wc -l)
-[[ "$count" -eq 5 ]] || fail "should have 5 distinct models, got $count: $distinct"
+[[ "$count" -eq 6 ]] || fail "should have 6 distinct models, got $count: $distinct"
 echo "$distinct" | grep -q "meta/muse-spark-1.1" || fail "missing meta family"
 echo "$distinct" | grep -q "google/gemini" || fail "missing google family"
 echo "$distinct" | grep -q "anthropic/" || fail "missing anthropic family"
-echo "$distinct" | grep -q "openai/" || fail "missing openai family"
 echo "$distinct" | grep -q "qwen/" || fail "missing qwen family"
+echo "$distinct" | grep -q "cursor/" || fail "missing cursor family (council)"
+# allow duplicate meta for build+plan orchestrator (both meta) — council needs strong reasoning
 dups_agents=$(jq -r '.agent[]?.model // empty' opencode.json.example | sort | uniq -d)
-[[ -z "$dups_agents" ]] || fail "duplicate model IDs among agents found: $dups_agents"
+# only meta duplicate is allowed (build + plan both meta)
+if [[ -n "$dups_agents" ]]; then
+  [[ "$dups_agents" == "meta/muse-spark-1.1" ]] || fail "duplicate model IDs among agents found (only meta dup allowed): $dups_agents"
+fi
 total_entries=$(jq -r '[.model, .small_model] + [.agent[]?.model // empty] | length' opencode.json.example)
-[[ "$total_entries" -eq 6 ]] || fail "expected 6 model entries (model+small+4 agents), got $total_entries"
+[[ "$total_entries" -eq 8 ]] || fail "expected 8 model entries (model+small+6 agents), got $total_entries"
 
-# AC-4: agents use varied models
+# AC-4: agents use varied models — council pattern
 jq -e '.agent.build.model=="meta/muse-spark-1.1"' opencode.json.example >/dev/null || fail "build should use meta"
 jq -e '.agent.fixer.model=="openrouter/anthropic/claude-sonnet-4-5"' opencode.json.example >/dev/null || fail "fixer should use anthropic"
 jq -e '.agent.explore.model=="openrouter/qwen/qwen3-coder"' opencode.json.example >/dev/null || fail "explore should use qwen"
-jq -e '.agent.plan.model=="openrouter/openai/gpt-4o-mini"' opencode.json.example >/dev/null || fail "plan should use openai"
+jq -e '.agent.plan.model=="meta/muse-spark-1.1"' opencode.json.example >/dev/null || fail "plan should use meta (council orchestrator)"
+jq -e '.agent."council-critic".model=="cursor/claude-opus-4-6"' opencode.json.example >/dev/null || fail "council-critic should use cursor/claude-opus-4-6"
+jq -e '.agent."council-creative".model=="cursor/composer-2.5"' opencode.json.example >/dev/null || fail "council-creative should use cursor/composer-2.5"
 
 jq -e '.agent.build' opencode.json.example >/dev/null || fail "build agent missing"
 jq -e '.agent.fixer' opencode.json.example >/dev/null || fail "fixer agent missing"
-pass "config valid — 5 models: $(echo $distinct | tr '\n' ',' | sed 's/,$//')"
+jq -e '.agent.plan' opencode.json.example >/dev/null || fail "plan council orchestrator missing"
+jq -e '.agent."council-critic"' opencode.json.example >/dev/null || fail "council-critic missing"
+jq -e '.agent."council-creative"' opencode.json.example >/dev/null || fail "council-creative missing"
+pass "config valid — 6 models: $(echo $distinct | tr '\n' ',' | sed 's/,$//')"
 
 out="$(bash scripts/detect-oracle.sh)"; [[ -n "$out" ]] || fail "oracle empty"
 echo "$out" | grep -q "bash tests/validate.sh" || fail "oracle missing validate"

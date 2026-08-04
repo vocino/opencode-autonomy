@@ -187,7 +187,8 @@ export const AutonomyPlugin: Plugin = async () => {
               "3. Implement — Batch 3-5 related files. Follow existing patterns.",
               "4. Verify — Run `bash scripts/detect-oracle.sh` or infer from package.json, capture evidence. This is DoD.",
               "5. Fix — Any failure → @fixer, rerun until green or 3x same error.",
-              "6. Ship — Report changes, verification, commit message.",
+              "6. Version — semver.org MAJOR.MINOR.PATCH: MAJOR=baking API, MINOR=feature compat, PATCH=bugfix compat. 0.y.z: MINOR for breaking-ish, PATCH for fix. fix:→PATCH, feat:→MINOR, feat!:→MAJOR. Use smallest appropriate.",
+              "7. Ship — Report changes, verification, semver bump + why, commit message (type matches bump).",
             ].join("\n"),
           };
         }

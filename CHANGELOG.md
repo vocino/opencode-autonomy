@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/vocino/opencode-autonomy/compare/v0.3.0...v0.4.0) (2026-08-04)
+
+
+### Features
+
+* improve autonomy durability with crash-safe config injection ([99533d4](https://github.com/vocino/opencode-autonomy/commit/99533d4d19aceda8fc55a2d6335f5b20bffde590))
+* improve autonomy durability with crash-safe config injection and recovery ([b32d2b1](https://github.com/vocino/opencode-autonomy/commit/b32d2b1b03ff9e47d9c8001e9ed03e73848c0862))
+
+
+### Bug Fixes
+
+* remove Co-authored-by literal from CHANGELOG to pass attribution guard ([2a2bff7](https://github.com/vocino/opencode-autonomy/commit/2a2bff7f0b0cac0e30edc6df78dd2aedc4df9d6c))
+
 ## [0.3.0](https://github.com/vocino/opencode-autonomy/compare/v0.2.5...v0.3.0) (2026-08-03)
 
 

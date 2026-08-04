@@ -2,8 +2,12 @@
  * Bundled markdown templates for agents and commands.
  * These are the single source of truth; the npx installer copies them,
  * and the plugin can inject them via config if needed.
+ *
+ * Durability improvements:
+ * - readAsset never throws; returns "" on any failure
+ * - getBuildAgentMd etc return fallback if read file is whitespace/empty
+ * - protects against race where pkg dir is renamed / file unreadable mid-session
  */
-
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -13,35 +17,44 @@ const pkgRoot = join(__dirname, "..");
 
 function readAsset(rel: string): string {
   try {
-    return readFileSync(join(pkgRoot, rel), "utf8");
+    const full = join(pkgRoot, rel);
+    const content = readFileSync(full, "utf8");
+    // Treat whitespace-only as empty so fallback wins
+    if (!content || content.trim().length === 0) return "";
+    return content;
   } catch {
     return "";
   }
 }
 
+function nonEmptyOrFallback(asset: string, fallback: string): string {
+  if (!asset || asset.trim().length === 0) return fallback;
+  return asset;
+}
+
 export function getBuildAgentMd(): string {
-  return readAsset("agents/build.md") || fallbackBuild;
+  return nonEmptyOrFallback(readAsset("agents/build.md"), fallbackBuild);
 }
 export function getFixerAgentMd(): string {
-  return readAsset("agents/fixer.md") || fallbackFixer;
+  return nonEmptyOrFallback(readAsset("agents/fixer.md"), fallbackFixer);
 }
 export function getPlanAgentMd(): string {
-  return readAsset("agents/plan.md") || fallbackPlan;
+  return nonEmptyOrFallback(readAsset("agents/plan.md"), fallbackPlan);
 }
 export function getCouncilCriticMd(): string {
-  return readAsset("agents/council-critic.md") || fallbackCritic;
+  return nonEmptyOrFallback(readAsset("agents/council-critic.md"), fallbackCritic);
 }
 export function getCouncilCreativeMd(): string {
-  return readAsset("agents/council-creative.md") || fallbackCreative;
+  return nonEmptyOrFallback(readAsset("agents/council-creative.md"), fallbackCreative);
 }
 export function getExploreAgentMd(): string {
-  return readAsset("agents/explore.md") || fallbackExplore;
+  return nonEmptyOrFallback(readAsset("agents/explore.md"), fallbackExplore);
 }
 export function getShipCommandMd(): string {
-  return readAsset("commands/ship.md") || fallbackShip;
+  return nonEmptyOrFallback(readAsset("commands/ship.md"), fallbackShip);
 }
 export function getFixCommandMd(): string {
-  return readAsset("commands/fix.md") || fallbackFix;
+  return nonEmptyOrFallback(readAsset("commands/fix.md"), fallbackFix);
 }
 
 const fallbackBuild = `---
@@ -154,7 +167,6 @@ const fallbackShip = `---
 description: Ship — closed loop from concept to verified outcome
 agent: build
 ---
-
 Goal: $ARGUMENTS
 
 ## The closed loop — do not skip phases
@@ -170,7 +182,6 @@ const fallbackFix = `---
 description: Fix — quick repair with verification loop
 agent: build
 ---
-
 Fix: $ARGUMENTS
 
 ## Protocol

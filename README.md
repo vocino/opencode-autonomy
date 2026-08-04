@@ -363,6 +363,23 @@ opencode plugin opencode-autonomy@latest --global -f
 npx opencode-autonomy@latest --clean
 ```
 
+## Ecosystem — opencode suite
+
+Part of a small, explicit toolkit for opencode — fewest moving parts, no bloat, each does one thing well:
+
+- **opencode-autonomy** — you are here, zero-babysitting config, 5 models, 5 families — [vocino/opencode-autonomy](https://github.com/vocino/opencode-autonomy)
+- **opencode-ambient** — see where tokens and money go, Hue + Govee glow from your room — [vocino/opencode-ambient](https://github.com/vocino/opencode-ambient) — `npm i -g opencode-ambient`
+
+Install both, they compose:
+
+```bash
+opencode plugin opencode-autonomy --global
+npm i -g opencode-ambient && opencode-ambient setup && opencode-ambient start
+# opencode-ambient now shows autonomy's 4 agents + Cursor/Meta council live
+```
+
+More coming — same thesis, one-binary, explicit over clever.
+
 ## Contributing
 
 PRs welcome. Goal is to keep it the obvious way to ship, not to add more stuff.

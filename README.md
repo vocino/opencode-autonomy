@@ -391,6 +391,24 @@ Before you open a PR:
 
 Ideas that would help: better oracle detection for Rust/Go/Python, clearer errors in install.sh, example repos showing /ship working.
 
+## Versioning
+
+This project follows [Semantic Versioning 2.0.0](https://semver.org) — `MAJOR.MINOR.PATCH`
+
+- **MAJOR** — breaking API change, incompatible
+- **MINOR** — new feature, backwards-compatible  
+- **PATCH** — bugfix, backwards-compatible
+
+While we're `0.y.z` (initial development): MINOR can include breaking-ish changes, PATCH is compatible fix. No arbitrary jumps.
+
+We use Conventional Commits so release-please handles bumps:
+
+- `fix:` → PATCH
+- `feat:` → MINOR
+- `feat!:` or `BREAKING CHANGE:` → MAJOR (MINOR while `0.y.z` with note)
+
+Every release has a matching `vX.Y.Z` tag which auto-publishes to npm via trusted publisher with provenance. See `CHANGELOG.md`.
+
 ## License
 
 MIT — see LICENSE.

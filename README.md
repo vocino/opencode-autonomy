@@ -60,7 +60,7 @@ Parallel search with `@explore`, patches, reruns checks.
 
 `Tab` to `plan` = read-only, asks first. Good for dry runs.
 
-## What it enables
+## Autonomy & Permissions — READ THIS
 
 This is allow-all autonomy. Be aware.
 
@@ -69,6 +69,9 @@ permission: {"*":"allow", "external_directory":"allow", "doom_loop":"allow"}
 batch_tool, 300 step build, 150 step fixer, 3x same-error stop
 5000 lines / 200KB logs, tail 12, subagent_depth 3
 ```
+
+ALLOW = allow all with `"*":"allow"` — full disk + bash + external dirs.
+Adds `plugin: ["opencode-autonomy"]` at runtime, keeps your model/provider.
 
 What happens:
 

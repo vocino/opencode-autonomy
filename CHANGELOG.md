@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/vocino/opencode-autonomy/compare/v0.4.0...v0.5.0) (2026-08-07)
+
+
+### Features
+
+* embed semver.org reasoning into ship cycle ([32a958e](https://github.com/vocino/opencode-autonomy/commit/32a958e3904db55290f08de0d5c253aead4eab28))
+* migrate default model to muse-spark-1.2-contributor ([781e096](https://github.com/vocino/opencode-autonomy/commit/781e096b5c1f7e8cfbdf56601591dbc2d1b3d85a))
+
 ## [0.4.0](https://github.com/vocino/opencode-autonomy/compare/v0.3.0...v0.4.0) (2026-08-04)
 
 

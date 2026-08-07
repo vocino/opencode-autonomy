@@ -19,7 +19,7 @@ export const AUTONOMY_AGENTS = {
     mode: "primary" as const,
     steps: 300,
     temperature: 0.2,
-    model: "meta/muse-spark-1.1",
+    model: "meta/muse-spark-1.2-contributor",
     description: "High-autonomy build agent — ships features end-to-end",
   },
   fixer: {
@@ -39,7 +39,7 @@ export const AUTONOMY_AGENTS = {
     mode: "primary" as const,
     steps: 200,
     temperature: 0.4,
-    model: "meta/muse-spark-1.1",
+    model: "meta/muse-spark-1.2-contributor",
     description: "Council orchestrator — meta leads 2 cursor specialists for robust, creative plans",
     permission: {
       bash: "ask",
@@ -105,6 +105,18 @@ export const AUTONOMY_PROVIDERS = {
         reasoning: true,
         limit: { context: 1_048_576, output: 131_072 },
       },
+      "muse-spark-1.2": {
+        name: "Muse Spark 1.2",
+        reasoning: true,
+        limit: { context: 1_048_576, output: 131_072 },
+      },
+      "muse-spark-1.2-contributor": {
+        name: "Muse Spark 1.2 Contributor",
+        reasoning: true,
+        limit: { context: 1_048_576, output: 131_072 },
+        modalities: { input: ["text", "image", "pdf", "video", "audio"], output: ["text"] },
+        options: { reasoningEffort: "high", reasoningSummary: "auto", include: ["reasoning.encrypted_content"] },
+      },
     },
   },
   openrouter: {
@@ -125,7 +137,7 @@ export const AUTONOMY_PROVIDERS = {
 };
 
 export const AUTONOMY_MODELS = {
-  model: "meta/muse-spark-1.1",
+  model: "meta/muse-spark-1.2-contributor",
   small_model: "openrouter/google/gemini-flash-latest",
 };
 

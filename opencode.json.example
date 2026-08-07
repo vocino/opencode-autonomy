@@ -1,15 +1,29 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "meta/muse-spark-1.1",
+  "model": "meta/muse-spark-1.2-contributor",
   "small_model": "openrouter/google/gemini-flash-latest",
   "subagent_depth": 3,
   "snapshot": true,
   "formatter": true,
   "lsp": true,
-  "tool_output": { "max_lines": 5000, "max_bytes": 204800 },
-  "compaction": { "auto": true, "tail_turns": 12, "reserved": 20000 },
-  "experimental": { "batch_tool": true, "continue_loop_on_deny": true },
-  "permission": { "*": "allow", "external_directory": "allow", "doom_loop": "allow" },
+  "tool_output": {
+    "max_lines": 5000,
+    "max_bytes": 204800
+  },
+  "compaction": {
+    "auto": true,
+    "tail_turns": 12,
+    "reserved": 20000
+  },
+  "experimental": {
+    "batch_tool": true,
+    "continue_loop_on_deny": true
+  },
+  "permission": {
+    "*": "allow",
+    "external_directory": "allow",
+    "doom_loop": "allow"
+  },
   "provider": {
     "meta": {
       "npm": "@ai-sdk/openai",
@@ -22,12 +36,52 @@
         "muse-spark-1.1": {
           "name": "Muse Spark 1.1",
           "reasoning": true,
-          "limit": { "context": 1048576, "output": 131072 }
+          "limit": {
+            "context": 1048576,
+            "output": 131072
+          }
+        },
+        "muse-spark-1.2": {
+          "name": "Muse Spark 1.2",
+          "reasoning": true,
+          "limit": {
+            "context": 1048576,
+            "output": 131072
+          }
+        },
+        "muse-spark-1.2-contributor": {
+          "name": "Muse Spark 1.2 Contributor",
+          "reasoning": true,
+          "limit": {
+            "context": 1048576,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf",
+              "video",
+              "audio"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "options": {
+            "reasoningEffort": "high",
+            "reasoningSummary": "auto",
+            "include": [
+              "reasoning.encrypted_content"
+            ]
+          }
         }
       }
     },
     "openrouter": {
-      "options": { "apiKey": "{env:OPENROUTER_API_KEY}" }
+      "options": {
+        "apiKey": "{env:OPENROUTER_API_KEY}"
+      }
     },
     "cursor": {
       "npm": "@stablekernel/opencode-cursor",
@@ -47,7 +101,7 @@
       "mode": "primary",
       "steps": 300,
       "temperature": 0.2,
-      "model": "meta/muse-spark-1.1"
+      "model": "meta/muse-spark-1.2-contributor"
     },
     "fixer": {
       "mode": "subagent",
@@ -64,25 +118,55 @@
       "mode": "primary",
       "steps": 200,
       "temperature": 0.4,
-      "model": "meta/muse-spark-1.1",
-      "description": "Council orchestrator — meta leads 2 cursor specialists for robust, creative plans",
-      "permission": { "bash": "ask", "edit": "ask", "write": "ask", "read": "allow", "glob": "allow", "grep": "allow", "list": "allow", "task": "allow", "external_directory": "allow" }
+      "model": "meta/muse-spark-1.2-contributor",
+      "description": "Council orchestrator \u2014 meta leads 2 cursor specialists for robust, creative plans",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask",
+        "write": "ask",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "task": "allow",
+        "external_directory": "allow"
+      }
     },
     "council-critic": {
       "mode": "subagent",
       "steps": 120,
       "temperature": 0.3,
       "model": "cursor/claude-opus-4-6",
-      "description": "Council critic — rigorous, finds flaws, risks, edge cases",
-      "permission": { "bash": "ask", "edit": "ask", "write": "ask", "read": "allow", "glob": "allow", "grep": "allow", "list": "allow", "task": "allow", "external_directory": "allow" }
+      "description": "Council critic \u2014 rigorous, finds flaws, risks, edge cases",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask",
+        "write": "ask",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "task": "allow",
+        "external_directory": "allow"
+      }
     },
     "council-creative": {
       "mode": "subagent",
       "steps": 120,
       "temperature": 0.8,
       "model": "cursor/composer-2.5",
-      "description": "Council creative — divergent, novel, interesting approaches",
-      "permission": { "bash": "ask", "edit": "ask", "write": "ask", "read": "allow", "glob": "allow", "grep": "allow", "list": "allow", "task": "allow", "external_directory": "allow" }
+      "description": "Council creative \u2014 divergent, novel, interesting approaches",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask",
+        "write": "ask",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "task": "allow",
+        "external_directory": "allow"
+      }
     }
   }
 }

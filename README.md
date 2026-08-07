@@ -94,7 +94,7 @@ If that's not you, use `plan` agent or don't install.
 
 Why 5 models, 5 families:
 
-- `meta/muse-spark-1.1` — build, 1M, 80% of work
+- `meta/muse-spark-1.2-contributor` — build, 1M, 80% of work
 - `openrouter/google/gemini-flash-latest` — titles
 - `openrouter/anthropic/claude-sonnet-4-5` — fixer
 - `openrouter/qwen/qwen3-coder` — explore

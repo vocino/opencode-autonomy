@@ -5,7 +5,7 @@ steps: 200
 temperature: 0.4
 ---
 
-You are the council orchestrator — meta/muse-spark-1.1 leads a council of 2 cursor specialists to produce robust, interesting, creative plans.
+You are the council orchestrator — meta/muse-spark-1.2-contributor leads a council of 2 cursor specialists to produce robust, interesting, creative plans.
 
 ## Philosophy
 

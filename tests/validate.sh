@@ -16,7 +16,7 @@ jq empty package.json || fail "invalid package.json"
 pass "json valid"
 
 # AC-1: strong default meta
-jq -e '.model=="meta/muse-spark-1.1"' opencode.json.example >/dev/null || fail "model should be meta/muse-spark-1.1"
+jq -e '.model=="meta/muse-spark-1.2-contributor"' opencode.json.example >/dev/null || fail "model should be meta/muse-spark-1.2-contributor"
 jq -e '.small_model=="openrouter/google/gemini-flash-latest"' opencode.json.example >/dev/null || fail "small_model should be google flash"
 
 # AC-2: providers include meta + openrouter + cursor (council), no secrets
@@ -31,7 +31,7 @@ jq -e '.provider.cursor.options.apiKey|startswith("{file:")' opencode.json.examp
 distinct=$(jq -r '[.model, .small_model] + [.agent[]?.model // empty] | unique | .[]' opencode.json.example | sort -u)
 count=$(echo "$distinct" | wc -l)
 [[ "$count" -eq 6 ]] || fail "should have 6 distinct models, got $count: $distinct"
-echo "$distinct" | grep -q "meta/muse-spark-1.1" || fail "missing meta family"
+echo "$distinct" | grep -q "meta/muse-spark-1.2-contributor" || fail "missing meta family"
 echo "$distinct" | grep -q "google/gemini" || fail "missing google family"
 echo "$distinct" | grep -q "anthropic/" || fail "missing anthropic family"
 echo "$distinct" | grep -q "qwen/" || fail "missing qwen family"
@@ -40,16 +40,16 @@ echo "$distinct" | grep -q "cursor/" || fail "missing cursor family (council)"
 dups_agents=$(jq -r '.agent[]?.model // empty' opencode.json.example | sort | uniq -d)
 # only meta duplicate is allowed (build + plan both meta)
 if [[ -n "$dups_agents" ]]; then
-  [[ "$dups_agents" == "meta/muse-spark-1.1" ]] || fail "duplicate model IDs among agents found (only meta dup allowed): $dups_agents"
+  [[ "$dups_agents" == "meta/muse-spark-1.2-contributor" ]] || fail "duplicate model IDs among agents found (only meta dup allowed): $dups_agents"
 fi
 total_entries=$(jq -r '[.model, .small_model] + [.agent[]?.model // empty] | length' opencode.json.example)
 [[ "$total_entries" -eq 8 ]] || fail "expected 8 model entries (model+small+6 agents), got $total_entries"
 
 # AC-4: agents use varied models — council pattern
-jq -e '.agent.build.model=="meta/muse-spark-1.1"' opencode.json.example >/dev/null || fail "build should use meta"
+jq -e '.agent.build.model=="meta/muse-spark-1.2-contributor"' opencode.json.example >/dev/null || fail "build should use meta"
 jq -e '.agent.fixer.model=="openrouter/anthropic/claude-sonnet-4-5"' opencode.json.example >/dev/null || fail "fixer should use anthropic"
 jq -e '.agent.explore.model=="openrouter/qwen/qwen3-coder"' opencode.json.example >/dev/null || fail "explore should use qwen"
-jq -e '.agent.plan.model=="meta/muse-spark-1.1"' opencode.json.example >/dev/null || fail "plan should use meta (council orchestrator)"
+jq -e '.agent.plan.model=="meta/muse-spark-1.2-contributor"' opencode.json.example >/dev/null || fail "plan should use meta (council orchestrator)"
 jq -e '.agent."council-critic".model=="cursor/claude-opus-4-6"' opencode.json.example >/dev/null || fail "council-critic should use cursor/claude-opus-4-6"
 jq -e '.agent."council-creative".model=="cursor/composer-2.5"' opencode.json.example >/dev/null || fail "council-creative should use cursor/composer-2.5"
 
@@ -123,7 +123,7 @@ XDG_CONFIG_HOME="$tmp" ./install.sh >/tmp/install.log 2>&1
 [[ -f "$tmp/opencode/commands/ship.md" ]] || fail "smoke install: ship.md missing"
 [[ -f "$tmp/opencode/commands/fix.md" ]] || fail "smoke install: fix.md missing"
 jq empty "$tmp/opencode/opencode.json" || fail "smoke installed json invalid"
-jq -e '.model=="meta/muse-spark-1.1"' "$tmp/opencode/opencode.json" >/dev/null || fail "smoke install model should be meta"
+jq -e '.model=="meta/muse-spark-1.2-contributor"' "$tmp/opencode/opencode.json" >/dev/null || fail "smoke install model should be meta"
 jq -e '.permission."*"=="allow"' "$tmp/opencode/opencode.json" >/dev/null || fail "smoke install should have allow-all permission"
 pass "smoke install fresh ok"
 

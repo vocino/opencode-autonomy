@@ -101,7 +101,15 @@
       "mode": "primary",
       "steps": 300,
       "temperature": 0.2,
-      "model": "meta/muse-spark-1.2-contributor"
+      "model": "meta/muse-spark-1.2-contributor",
+      "description": "High-autonomy build agent — parallel-aware orchestrator"
+    },
+    "build-worker": {
+      "mode": "subagent",
+      "steps": 200,
+      "temperature": 0.2,
+      "model": "meta/muse-spark-1.2-contributor",
+      "description": "Build worker — executes one parallel lane with same model as build"
     },
     "fixer": {
       "mode": "subagent",

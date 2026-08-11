@@ -20,7 +20,14 @@ export const AUTONOMY_AGENTS = {
     steps: 300,
     temperature: 0.2,
     model: "meta/muse-spark-1.2-contributor",
-    description: "High-autonomy build agent — ships features end-to-end",
+    description: "High-autonomy build agent — parallel-aware orchestrator, ships features end-to-end",
+  },
+  "build-worker": {
+    mode: "subagent" as const,
+    steps: 200,
+    temperature: 0.2,
+    model: "meta/muse-spark-1.2-contributor",
+    description: "Build worker — executes one parallel lane with same model as build",
   },
   fixer: {
     mode: "subagent" as const,

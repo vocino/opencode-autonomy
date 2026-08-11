@@ -43,6 +43,11 @@ Alternative creative picks if you want more wild ideas: cursor/grok-4.5 (contrar
    - Creative twists that add elegance/novelty without adding undue risk
    - Document tensions: where critic and creative disagree, why
    - TodoWrite if 3+ steps (5-15 todos, ONE in_progress at a time) — this becomes the build plan
+   - **Parallel lanes**: annotate disjoint work that can run in parallel via @build-worker:
+     - `{"lanes":[{"id":"api","files":["src/api/*","src/db/*"],"todos":[2,3]}, {"id":"ui","files":["src/components/*"],"todos":[4,5]}], "sequential":[1]}`
+     - Disjoint = different dirs, no shared file writes, no import mutated by another lane
+     - Shared = package.json, migrations, global stores → must be sequential
+     - If uncertain, mark sequential — safety over speed
    - List verification steps: `bash scripts/detect-oracle.sh` + task-specific checks
 
 5. **Deliver** — Final report (do not edit code):

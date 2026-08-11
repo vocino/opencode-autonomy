@@ -86,15 +86,17 @@ If that's not you, use `plan` agent or don't install.
 ## What's inside
 
 - `opencode.json.example` — full config, readable in 5 minutes
-- `commands/ship.md` — the whole loop
-- `agents/build.md` + `agents/fixer.md` — 2 agents, not 15
+- `commands/ship.md` — the whole loop, parallel-aware
+- `agents/build.md` — orchestrator, parallel lane detection + fan-out
+- `agents/build-worker.md` — same-model workers, one per lane
+- `agents/fixer.md`, `agents/explore.md`, council agents — minimal set
 - `src/autonomy.ts` — single source of truth for forced keys
 - `src/plugin.ts` — v1 config hook, preserves your model/provider
 - `bin/cli.mjs` — zero-dep npx installer
 
-Why 5 models, 5 families:
+Why 5 models, 5 families (build + workers share meta):
 
-- `meta/muse-spark-1.2-contributor` — build, 1M, 80% of work
+- `meta/muse-spark-1.2-contributor` — build orchestrator + build-worker lanes, 1M, 80% of work
 - `openrouter/google/gemini-flash-latest` — titles
 - `openrouter/anthropic/claude-sonnet-4-5` — fixer
 - `openrouter/qwen/qwen3-coder` — explore
@@ -125,11 +127,12 @@ Updates: `opencode plugin opencode-autonomy@latest --global -f`
 ```
 /ship "goal"
   -> Concept: read repo + git status
-  -> Plan: TodoWrite if 3+ steps
-  -> Implement: batch 3-5 files, @explore parallel
+  -> Plan: TodoWrite if 3+ steps + annotate parallel lanes (disjoint file sets)
+  -> Implement: parallel via @build-worker (same model, 2-3x faster) OR sequential batch 3-5 files
+  -> Merge: collect lane summaries (no file overlap)
   -> Verify: detect-oracle.sh → lint/type/test/build
-  -> Fix: @fixer until green
-  -> Ship: report + commit msg
+  -> Fix: @fixer per failing lane, parallel if disjoint
+  -> Ship: report + parallelism used + commit msg
 ```
 
 `detect-oracle.sh` finds your checks from `package.json`.

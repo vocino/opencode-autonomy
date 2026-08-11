@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/vocino/opencode-autonomy/compare/v0.5.0...v0.6.0) (2026-08-10)
+
+
+### Features
+
+* **build:** parallel-aware orchestrator with same-model build-worker subagents, disjoint file lanes via batch_tool, 2-3x faster for independent work ([parallel])
+
 ## [0.5.0](https://github.com/vocino/opencode-autonomy/compare/v0.4.0...v0.5.0) (2026-08-07)
 
 

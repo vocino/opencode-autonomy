@@ -15,24 +15,34 @@ You end up cleaning up after it.
 
 ## How to install
 
-The easiest way — paste this into opencode, ChatGPT, Claude Code, Codex:
+### Copy-paste prompt — keeps your models
+
+Paste this into opencode (preferred — it understands your current config):
 
 ```
-Install the opencode-autonomy plugin globally from https://github.com/vocino/opencode-autonomy
+Install the opencode-autonomy plugin from https://github.com/vocino/opencode-autonomy — keep my existing models, providers, and apiKeys in opencode.json. Only set model/small_model/agent model if I don't already have one. Merge autonomy agents (build, build-worker, fixer, explore, plan, council-critic, council-creative) without overwriting my custom agent models. Add parallel build-worker lane support (same model as build). Preserve my provider baseURL/apiKey. Verify with opencode debug config.
 ```
 
-Or in your shell:
+You still get the power of different models (build + workers share 1M, fixer is sonar-ish, explore is qwen), but if you already pinned `build` to claude-sonnet or your own meta key, it stays yours. New users get the 5-model defaults.
+
+### Shell install — also preserves models
+
+Same merge logic now lives in the CLI:
 
 ```bash
 opencode plugin opencode-autonomy --global
-npx opencode-autonomy@latest --clean   # optional local md assets you can edit
+npx opencode-autonomy@latest --clean   # copies agents/ + merges opencode.json without nuking your models
 ```
 
 Verify:
 
 ```bash
 opencode debug config
+agents list   # should show build, build-worker, fixer, explore, plan
 ```
+
+If you *want* our defaults, just delete `~/.config/opencode/opencode.json` and re-run `npx` — you'll get the full 5-model suite.
+
 
 ## How to use
 

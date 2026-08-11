@@ -280,27 +280,58 @@ function main() {
       const userSmall = destJson.small_model;
       const userProvider = destJson.provider;
 
-      // start with dest, overlay autonomy
-      let merged = { ...destJson, ...autonomySlice };
+      // start with dest, overlay autonomy keys but preserve user choices
+      // non-agent keys: dest + autonomySlice wins for permission/snapshot/etc
+      let merged = { ...destJson };
+      for (const k of Object.keys(autonomySlice)) {
+        if (k === "agent") continue;
+        if (k === "provider") continue;
+        merged[k] = autonomySlice[k];
+      }
 
-      // restore user model/provider
+      // restore user model/provider if present (plugin + CLI both preserve)
       if (userModel) merged.model = userModel;
+      else if (exampleJson.model) merged.model = exampleJson.model;
       if (userSmall) merged.small_model = userSmall;
-      // provider: merge autonomy providers into user provider, user wins on key conflict for apiKey etc but we ensure meta/openrouter exist
+      else if (exampleJson.small_model) merged.small_model = exampleJson.small_model;
+
+      // provider: deep-ish merge — user keys win, but ensure our providers exist
       if (userProvider) {
-        merged.provider = { ...(autonomySlice.provider?._isFallback ? {} : {}), ...userProvider };
-        // Ensure our two providers exist even if user had only custom
+        merged.provider = { ...(exampleJson.provider || {}), ...userProvider };
+        // ensure any missing provider from example gets added, and preserve user apiKey/baseURL
         for (const [pid, pdef] of Object.entries(exampleJson.provider || {})) {
-          if (!merged.provider[pid]) {
-            merged.provider[pid] = pdef;
-          }
+          if (!merged.provider[pid]) merged.provider[pid] = pdef;
         }
       } else {
         merged.provider = exampleJson.provider;
       }
-      // Ensure model defaults exist if not set
       if (!merged.model) merged.model = exampleJson.model;
       if (!merged.small_model) merged.small_model = exampleJson.small_model;
+
+      // agent: preserve existing user agents (their model wins), add missing autonomy agents
+      // this is the key fix — don't nuke custom models
+      merged.agent = { ...(destJson.agent || {}) };
+      for (const [aId, aDef] of Object.entries(autonomySlice.agent || {})) {
+        if (!merged.agent[aId]) {
+          merged.agent[aId] = aDef;
+        } else {
+          const existing = merged.agent[aId];
+          merged.agent[aId] = {
+            ...(aDef as any),
+            ...(existing as any),
+            model: (existing as any).model ?? (aDef as any).model,
+          };
+        }
+      }
+      // same-model: build-worker mirrors build unless user pinned worker
+      try {
+        const bModel = merged.agent?.build?.model;
+        if (bModel && merged.agent?.["build-worker"]) {
+          const w = merged.agent["build-worker"];
+          const defW = (autonomySlice.agent?.["build-worker"]?.model);
+          if (!w.model || w.model === defW) w.model = bModel;
+        }
+      } catch {}
 
       // Write merged
       if (flags.dryRun) {

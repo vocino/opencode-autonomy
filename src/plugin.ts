@@ -89,6 +89,19 @@ export const AutonomyPlugin: Plugin = async () => {
         cfg.compaction = { ...AUTONOMY_CONFIG.compaction };
         cfg.experimental = { ...(cfg.experimental ?? {}), ...AUTONOMY_CONFIG.experimental };
         cfg.permission = { ...AUTONOMY_CONFIG.permission };
+        // same-model guarantee: build-worker = build model unless user explicitly set worker different
+        try {
+          const buildM = (cfg.agent as any)?.build?.model;
+          const worker = (cfg.agent as any)?.["build-worker"];
+          if (buildM && worker && !((worker as any)._userPinned)) {
+            // if worker model equals default meta and build is custom, sync to build
+            // also if worker missing model, sync
+            const defWorker = (AUTONOMY_AGENTS as any)["build-worker"]?.model;
+            if (!worker.model || worker.model === defWorker || worker.model === buildM) {
+              worker.model = buildM;
+            }
+          }
+        } catch {}
       });
 
       // 2. models — only set defaults if user hasn't chosen
@@ -139,6 +152,8 @@ export const AutonomyPlugin: Plugin = async () => {
       });
 
       // 4. agents — ensure ours exist, preserve user custom agents
+      // special: build-worker must mirror build model (same-model guarantee for parallel) unless user pinned build-worker explicitly
+
       safeApply("agents", () => {
         if (cfg.agent !== undefined && !isObject(cfg.agent)) {
           console.warn("[opencode-autonomy] agent config not an object, resetting");

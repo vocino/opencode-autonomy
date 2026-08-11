@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/vocino/opencode-autonomy/compare/v0.5.0...v0.6.0) (2026-08-11)
+
+
+### Features
+
+* parallel-aware build with same-model build-worker lanes ([a4a99b3](https://github.com/vocino/opencode-autonomy/commit/a4a99b39f28b0cdd92351e73ad6b810091b29d42))
+* preserve user models on install, same-model build-worker ([efd454d](https://github.com/vocino/opencode-autonomy/commit/efd454dcc1c65a42c80111b03878d4cb1252c90d))
+
+
+### Bug Fixes
+
+* build parallel by default, auto-spawn workers without tag ([307c58a](https://github.com/vocino/opencode-autonomy/commit/307c58ad65a13e7ef124fbdf4f5df7857e2a233e))
+
 ## [0.6.0](https://github.com/vocino/opencode-autonomy/compare/v0.5.0...v0.6.0) (2026-08-10)
 
 

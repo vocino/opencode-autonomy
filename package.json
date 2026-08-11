@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "opencode-autonomy",
-  "version": "0.6.2",
-  "description": "Autonomy-first opencode suite \u2014 ships features end-to-end without babysitting. Agents, commands, and opinionated config for long-horizon coding.",
+  "version": "0.6.0",
+  "description": "Autonomy-first opencode suite — ships features end-to-end without babysitting. Agents, commands, and opinionated config for long-horizon coding.",
   "type": "module",
   "license": "MIT",
   "author": "vocino",

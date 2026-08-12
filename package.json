@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "opencode-autonomy",
-  "version": "0.6.2",
-  "description": "Autonomy-first opencode suite \u2014 ships features end-to-end without babysitting. Agents, commands, and opinionated config for long-horizon coding.",
+  "version": "0.6.3",
+  "description": "Autonomy-first opencode suite — ships features end-to-end without babysitting. Agents, commands, and opinionated config for long-horizon coding.",
   "type": "module",
   "license": "MIT",
   "author": "vocino",
@@ -60,7 +60,6 @@
     "test": "bash tests/validate.sh",
     "lint": "shellcheck install.sh scripts/detect-oracle.sh && echo ok"
   },
-  "dependencies": {},
   "devDependencies": {
     "@opencode-ai/plugin": "^1.18.11",
     "@types/node": "^22.0.0",

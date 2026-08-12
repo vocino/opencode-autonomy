@@ -317,9 +317,9 @@ function main() {
         } else {
           const existing = merged.agent[aId];
           merged.agent[aId] = {
-            ...(aDef as any),
-            ...(existing as any),
-            model: (existing as any).model ?? (aDef as any).model,
+            ...aDef,
+            ...existing,
+            model: existing.model ?? aDef.model,
           };
         }
       }

@@ -124,7 +124,7 @@ opencode plugin opencode-autonomy --global
 opencode plugin opencode-autonomy
 
 # pin version
-opencode plugin opencode-autonomy@0.6.5 --global -f
+opencode plugin opencode-autonomy@0.6.6 --global -f
 
 # local markdown you can edit
 npx opencode-autonomy@latest --clean

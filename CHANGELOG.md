@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.11](https://github.com/vocino/opencode-autonomy/compare/v0.6.10...v0.6.11) (2026-10-02)
+
+
+### Bug Fixes
+
+* readme pin version 0.6.9 -&gt; 0.6.10 to match package.json ([4032214](https://github.com/vocino/opencode-autonomy/commit/40322141b91e627faf4d18fca0c8ce677fd40ee3))
+
 ## [0.6.10](https://github.com/vocino/opencode-autonomy/compare/v0.6.9...v0.6.10) (2026-09-30)
 
 
